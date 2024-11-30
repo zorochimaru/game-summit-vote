@@ -1,6 +1,6 @@
 {
   "name": "game-summit-vote",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
     "start": "npm run make-sprite && ng serve -o",
     "build": "ng build",
