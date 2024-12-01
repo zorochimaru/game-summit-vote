@@ -1,0 +1,50 @@
+<div class="container">
+  <div class="rate-container">
+    <div class="rate-panel">
+      <div class="rate-header">
+        <h2>Rate</h2>
+        <button type="button" mat-fab extended (click)="submitResults()">
+          <mat-icon>check</mat-icon>
+          Submit
+        </button>
+      </div>
+
+      <!-- TODO @for loop -->
+      <label for="rate-slider">Costume</label>
+      <mat-slider
+        id="rate-slider"
+        class="rate-slider"
+        showTickMarks
+        min="0"
+        max="10"
+        step="1"
+        discrete>
+        <input matSliderThumb />
+      </mat-slider>
+      <!-- TODO @for loop END-->
+    </div>
+    <div class="selected-item-image">
+      <!-- TODO use swiper -->
+      <img src="https://placehold.co/300x500" alt="" />
+    </div>
+    <div class="description-panel">
+      <h2>Description</h2>
+      <ul>
+        <!-- TODO @for loop -->
+        <li>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem
+          impedit, ex assumenda nesciunt, eius aperiam, animi unde cum omnis
+          amet exercitationem? Aliquam error quam laudantium atque perferendis
+          magnam deserunt dolore.
+        </li>
+        <!-- TODO @for loop END-->
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="vote-items-container">
+  <!-- TODO use swiper -->
+  <div class="vote-item">
+    <img src="https://placehold.co/100x200" alt="" />
+  </div>
+</div>

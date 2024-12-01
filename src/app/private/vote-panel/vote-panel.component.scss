@@ -1,0 +1,47 @@
+.rate-container {
+  margin-top: 30px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.rate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rate-slider {
+  width: 100%;
+}
+
+.selected-item-image {
+  flex-shrink: 0;
+
+  & img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.rate-panel {
+  flex-grow: 1;
+  width: 30%;
+}
+
+.description-panel {
+  flex-grow: 1;
+  width: 30%;
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+}
+
+.vote-items-container {
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

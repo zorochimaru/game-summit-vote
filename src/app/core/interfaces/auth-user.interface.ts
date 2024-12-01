@@ -1,8 +1,7 @@
+import { CommonFirestore } from './firestore';
 import { Roles } from './roles.enum';
 
-export interface AuthUser {
-  id: string;
+export interface AuthUser extends CommonFirestore {
   email: string;
-  canUpload: boolean;
   role: Roles;
 }

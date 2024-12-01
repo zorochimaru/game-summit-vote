@@ -1,1 +1,13 @@
-<p>dashboard works!</p>
+<div class="cards-container">
+  @for (item of cardLinks(); track $index) {
+    <mat-card
+      appearance="outlined"
+      class="card-link"
+      matRipple
+      [routerLink]="['/', votePanelRouterLink]"
+      [queryParams]="{ voteType: item.type }">
+      <mat-icon>{{ item.icon }}</mat-icon>
+      <span>{{ item.title }}</span>
+    </mat-card>
+  }
+</div>

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
+import { UserCredential } from '@angular/fire/auth';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { from, map, Observable } from 'rxjs';
+import { catchError, from, map, Observable, of } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,9 +16,24 @@ export class AuthService {
     ).pipe(map(() => void 0));
   }
 
-  public signIn(email: string, password: string): Observable<void> {
+  public signIn({
+    email,
+    password
+  }: {
+    email: string;
+    password: string;
+  }): Observable<UserCredential> {
     return from(this.#afAuth.signInWithEmailAndPassword(email, password)).pipe(
-      map(() => void 0)
+      catchError(error => {
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        if (errorCode === 'auth/wrong-password') {
+          alert('Wrong password.');
+        } else {
+          alert(errorMessage);
+        }
+        return of(error);
+      })
     );
   }
 

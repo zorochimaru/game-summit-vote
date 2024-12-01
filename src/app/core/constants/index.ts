@@ -1,2 +1,2 @@
 export * from './common.const';
-export * from './router.const';
+export * from './query-param-keys.constants';

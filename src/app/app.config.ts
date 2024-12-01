@@ -10,7 +10,7 @@ import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { getStorage, provideStorage } from '@angular/fire/storage';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withViewTransitions } from '@angular/router';
 
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
@@ -18,7 +18,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideExperimentalZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(routes, withViewTransitions()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     { provide: FIREBASE_OPTIONS, useValue: environment.firebase },
     provideAuth(() => getAuth()),
