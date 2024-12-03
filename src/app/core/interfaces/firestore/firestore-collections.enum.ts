@@ -3,13 +3,12 @@ export enum FirestoreCollections {
   cosplayTeamCriteria = 'cosplayTeamCriteria',
   cosplayTeamResults = 'cosplayTeamResults',
   cosplayTeams = 'cosplayTeams',
-  kPopSolo = 'kPopSolo',
+  kPop = 'kPop',
   kPopSoloCriteria = 'kPopSoloCriteria',
   kPopSoloResults = 'kPopSoloResults',
-  kPopTeams = 'kPopTeams',
   kPopTeamCriteria = 'kPopTeamCriteria',
   kPopTeamResults = 'kPopTeamResults',
-  cosplaySoloPersons = 'cosplaySoloPersons',
+  cosplaySolo = 'cosplaySolo',
   cosplaySoloCriteria = 'cosplaySoloCriteria',
   cosplaySoloResults = 'cosplaySoloResults'
 }

@@ -1,7 +1,14 @@
 <mat-toolbar>
   <a [routerLink]="['/']">Gamesummit Vote</a>
 
-  <button type="button" class="log-out-btn" mat-icon-button (click)="logOut()">
-    <mat-icon>logout</mat-icon>
-  </button>
+  <div class="right-panel">
+    @if (isAdmin()) {
+      <a [routerLink]="['/', adminPanelRouterLink]" mat-flat-button>
+        Admin Panel
+      </a>
+    }
+    <button type="button" mat-icon-button (click)="logOut()">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </div>
 </mat-toolbar>

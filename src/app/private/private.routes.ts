@@ -23,6 +23,13 @@ export const privateRoutes: Routes = [
           )
       },
       {
+        path: RouterLinks.adminPanel,
+        loadComponent: () =>
+          import('./admin-panel/admin-panel.component').then(
+            c => c.AdminPanelComponent
+          )
+      },
+      {
         path: '**',
         redirectTo: RouterLinks.dashboard,
         pathMatch: 'full'

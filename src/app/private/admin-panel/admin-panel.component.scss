@@ -1,0 +1,33 @@
+.admin-panel-container {
+  margin-top: 50px;
+}
+
+.table-container {
+  height: 500px;
+  overflow: auto;
+}
+
+.item-row {
+  cursor: pointer;
+}
+
+.mat-mdc-row .mat-mdc-cell {
+  cursor: pointer;
+}
+
+.mat-mdc-row:hover .mat-mdc-cell {
+  background-color: #eee;
+}
+
+.actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  margin-top: 20px;
+  height: 500px;
+}
