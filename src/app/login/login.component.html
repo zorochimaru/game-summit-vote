@@ -1,6 +1,10 @@
 <mat-card appearance="outlined" class="login-container">
   <mat-card-content>
-    <h2>Login</h2>
+    <mat-button-toggle-group class="toggle" [formControl]="modeControl">
+      <mat-button-toggle [value]="true">SignIn</mat-button-toggle>
+      <mat-button-toggle [value]="false">SignUp</mat-button-toggle>
+    </mat-button-toggle-group>
+
     <form [formGroup]="form" class="form-group">
       <mat-form-field class="full-width" appearance="outline">
         <mat-label>Email</mat-label>
@@ -41,7 +45,7 @@
         [disabled]="form.invalid"
         mat-stroked-button
         (click)="onSubmit()">
-        Login
+        Submit
       </button>
     </form>
   </mat-card-content>

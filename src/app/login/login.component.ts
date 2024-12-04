@@ -12,6 +12,7 @@ import {
   Validators
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -26,7 +27,8 @@ import { AuthService } from '../core';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatButtonToggleModule
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
@@ -36,6 +38,8 @@ export class LoginComponent {
   #authService = inject(AuthService);
   #dr = inject(DestroyRef);
   #router = inject(Router);
+
+  protected modeControl = new FormControl(true, { nonNullable: true });
 
   protected form = new FormGroup({
     email: new FormControl('', {
@@ -52,8 +56,30 @@ export class LoginComponent {
     if (this.form.invalid) {
       return;
     }
+    const { email, password } = this.form.getRawValue();
+    if (this.modeControl.getRawValue()) {
+      this.#onSignIn(email, password);
+    } else {
+      this.#onSignUp(email, password);
+    }
+  }
+
+  protected toggleMode(): void {
+    this.modeControl.patchValue(!this.modeControl.getRawValue());
+  }
+
+  #onSignUp(email: string, password: string): void {
     this.#authService
-      .signIn(this.form.getRawValue())
+      .signUp(email, password)
+      .pipe(takeUntilDestroyed(this.#dr))
+      .subscribe(() => {
+        this.form.reset();
+      });
+  }
+
+  #onSignIn(email: string, password: string): void {
+    this.#authService
+      .signIn(email, password)
       .pipe(takeUntilDestroyed(this.#dr))
       .subscribe(() => {
         this.#router.navigate(['/']);
