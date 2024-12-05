@@ -1,9 +1,15 @@
 <div class="container">
-  <div class="rate-container">
-    <div class="rate-panel">
+  <div class="score-container">
+    <div class="score-panel">
       <form [formGroup]="form">
-        <div class="rate-header">
-          <h2>Rate</h2>
+        <div class="score-header">
+          <h2>Score</h2>
+          <button type="button" mat-fab (click)="fetchCriteria()">
+            <mat-icon>cloud_download</mat-icon>
+          </button>
+          <button type="button" mat-fab (click)="fetchPersons()">
+            <mat-icon>cloud_download</mat-icon>
+          </button>
           <button type="button" mat-fab extended (click)="submitResults()">
             <mat-icon>check</mat-icon>
             Submit
@@ -12,28 +18,15 @@
         <div formArrayName="results">
           @for (item of criterias(); track $index; let i = $index) {
             <div [formGroupName]="i">
-              <label for="rate-slider">{{ item.name }}</label>
-              <input
-                type="text"
-                hidden
-                formControlName="criteriaId"
-                [value]="item.id" />
-              <input
-                type="text"
-                hidden
-                formControlName="criteriaName"
-                [value]="item.name" />
-              <mat-slider
-                formControlName="rate"
-                id="rate-slider"
-                class="rate-slider"
+              <app-slider
+                [label]="item.name"
+                formControlName="score"
                 showTickMarks
-                min="0"
-                max="10"
-                step="1"
+                [min]="0"
+                [max]="10"
+                [step]="1"
                 discrete>
-                <input matSliderThumb />
-              </mat-slider>
+              </app-slider>
             </div>
           }
         </div>
@@ -46,14 +39,14 @@
     <div class="description-panel">
       <h2>Description</h2>
       <ul>
-        <!-- TODO @for loop -->
-        <li>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatem
-          impedit, ex assumenda nesciunt, eius aperiam, animi unde cum omnis
-          amet exercitationem? Aliquam error quam laudantium atque perferendis
-          magnam deserunt dolore.
-        </li>
-        <!-- TODO @for loop END-->
+        @for (item of descriptionInfo(); track $index) {
+          <!-- TODO @for loop -->
+          <li>
+            <span class="description-label">{{ item.label | titlecase }}:</span>
+            <span class="description-value">{{ item.value }}</span>
+          </li>
+          <!-- TODO @for loop END-->
+        }
       </ul>
     </div>
   </div>

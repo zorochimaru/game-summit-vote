@@ -1,6 +1,12 @@
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TitleCasePipe } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  signal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +25,6 @@ import { read, utils } from 'xlsx';
 
 import {
   FirestoreBatchWriteItem,
-  FirestoreCollections,
   FirestoreService,
   Operations,
   StorageFolders,
@@ -36,6 +41,7 @@ import {
   Kpop,
   KpopFirestore
 } from '../core';
+import { PrivateService } from '../private.service';
 
 type VoteItem = Kpop | Cosplay;
 
@@ -52,13 +58,15 @@ type VoteItem = Kpop | Cosplay;
     MatFormFieldModule
   ],
   templateUrl: './admin-panel.component.html',
-  styleUrl: './admin-panel.component.scss'
+  styleUrl: './admin-panel.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminPanelComponent {
   readonly #firestoreService = inject(FirestoreService);
   readonly #dr = inject(DestroyRef);
   readonly #upload = inject(UploadService);
   readonly #snackBar = inject(MatSnackBar);
+  readonly #privateService = inject(PrivateService);
 
   protected criterias = signal<Criteria[] | CriteriaFirestore[]>([]);
   protected rows = signal<VoteItem[]>([]);
@@ -134,7 +142,9 @@ export class AdminPanelComponent {
   protected fetchCriterias(): void {
     this.#firestoreService
       .getList<CriteriaFirestore>(
-        this.#mapTypeToCriteriaCollection(this.typeControl.getRawValue())
+        this.#privateService.mapTypeToCriteriaCollection(
+          this.typeControl.getRawValue()
+        )
       )
       .subscribe(data => {
         this.criterias.set(data);
@@ -142,7 +152,7 @@ export class AdminPanelComponent {
   }
 
   protected fetchData(): void {
-    const collection = this.#mapTypeToCollection(
+    const collection = this.#privateService.mapTypeToCollection(
       this.typeControl.getRawValue()
     );
     this.#firestoreService
@@ -253,7 +263,7 @@ export class AdminPanelComponent {
             docId:
               (item['id'] as string) ||
               this.#generateId(this.typeControl.getRawValue()),
-            collectionName: this.#mapTypeToCollection(
+            collectionName: this.#privateService.mapTypeToCollection(
               this.typeControl.getRawValue()
             ),
             data: { ...item, image: imageRes[i].url }
@@ -280,7 +290,7 @@ export class AdminPanelComponent {
         docId:
           ((item as CriteriaFirestore)['id'] as string) ||
           this.#generateId(this.typeControl.getRawValue()),
-        collectionName: this.#mapTypeToCriteriaCollection(
+        collectionName: this.#privateService.mapTypeToCriteriaCollection(
           this.typeControl.getRawValue()
         ),
         data: { ...item }
@@ -324,26 +334,6 @@ export class AdminPanelComponent {
     }
   }
 
-  #mapTypeToCollection(type: VoteTypes): FirestoreCollections {
-    switch (type) {
-      case VoteTypes.cosplay:
-        return FirestoreCollections.cosplaySolo;
-      case VoteTypes.cosplayTeam:
-        return FirestoreCollections.cosplayTeams;
-      case VoteTypes.kpop:
-        return FirestoreCollections.kPop;
-    }
-  }
-  #mapTypeToCriteriaCollection(type: VoteTypes): FirestoreCollections {
-    switch (type) {
-      case VoteTypes.cosplay:
-        return FirestoreCollections.cosplaySoloCriteria;
-      case VoteTypes.cosplayTeam:
-        return FirestoreCollections.cosplayTeamCriteria;
-      case VoteTypes.kpop:
-        return FirestoreCollections.kPopCriteria;
-    }
-  }
   #mapTypeToStorageFolder(type: VoteTypes): StorageFolders {
     switch (type) {
       case VoteTypes.cosplay:
@@ -356,6 +346,8 @@ export class AdminPanelComponent {
   }
 
   #generateId(type: VoteTypes): string {
-    return this.#firestoreService.autoId(this.#mapTypeToCollection(type));
+    return this.#firestoreService.autoId(
+      this.#privateService.mapTypeToCollection(type)
+    );
   }
 }

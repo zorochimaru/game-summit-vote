@@ -1,12 +1,14 @@
 import { Routes } from '@angular/router';
 
 import { RouterLinks } from '../core';
+import { PrivateService } from './private.service';
 
 export const privateRoutes: Routes = [
   {
     path: '',
     loadComponent: () =>
       import('./private.component').then(c => c.PrivateComponent),
+    providers: [PrivateService],
     children: [
       {
         path: RouterLinks.dashboard,
