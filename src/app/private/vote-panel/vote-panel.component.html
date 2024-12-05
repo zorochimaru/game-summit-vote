@@ -1,27 +1,43 @@
 <div class="container">
   <div class="rate-container">
     <div class="rate-panel">
-      <div class="rate-header">
-        <h2>Rate</h2>
-        <button type="button" mat-fab extended (click)="submitResults()">
-          <mat-icon>check</mat-icon>
-          Submit
-        </button>
-      </div>
-
-      <!-- TODO @for loop -->
-      <label for="rate-slider">Costume</label>
-      <mat-slider
-        id="rate-slider"
-        class="rate-slider"
-        showTickMarks
-        min="0"
-        max="10"
-        step="1"
-        discrete>
-        <input matSliderThumb />
-      </mat-slider>
-      <!-- TODO @for loop END-->
+      <form [formGroup]="form">
+        <div class="rate-header">
+          <h2>Rate</h2>
+          <button type="button" mat-fab extended (click)="submitResults()">
+            <mat-icon>check</mat-icon>
+            Submit
+          </button>
+        </div>
+        <div formArrayName="results">
+          @for (item of criterias(); track $index; let i = $index) {
+            <div [formGroupName]="i">
+              <label for="rate-slider">{{ item.name }}</label>
+              <input
+                type="text"
+                hidden
+                formControlName="criteriaId"
+                [value]="item.id" />
+              <input
+                type="text"
+                hidden
+                formControlName="criteriaName"
+                [value]="item.name" />
+              <mat-slider
+                formControlName="rate"
+                id="rate-slider"
+                class="rate-slider"
+                showTickMarks
+                min="0"
+                max="10"
+                step="1"
+                discrete>
+                <input matSliderThumb />
+              </mat-slider>
+            </div>
+          }
+        </div>
+      </form>
     </div>
     <div class="selected-item-image">
       <!-- TODO use swiper -->

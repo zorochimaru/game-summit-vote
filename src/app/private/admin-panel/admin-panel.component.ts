@@ -1,9 +1,16 @@
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TitleCasePipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import {
+  MatChipEditedEvent,
+  MatChipInputEvent,
+  MatChipsModule
+} from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
@@ -19,9 +26,12 @@ import {
   UploadService,
   VoteTypes
 } from '../../core';
+import { filterPredicate } from '../../utils';
 import {
   Cosplay,
   CosplayFirestore,
+  Criteria,
+  CriteriaFirestore,
   ExcelFileFields,
   Kpop,
   KpopFirestore
@@ -37,7 +47,9 @@ type VoteItem = Kpop | Cosplay;
     ReactiveFormsModule,
     MatButtonToggleModule,
     MatTableModule,
-    TitleCasePipe
+    TitleCasePipe,
+    MatChipsModule,
+    MatFormFieldModule
   ],
   templateUrl: './admin-panel.component.html',
   styleUrl: './admin-panel.component.scss'
@@ -48,6 +60,7 @@ export class AdminPanelComponent {
   readonly #upload = inject(UploadService);
   readonly #snackBar = inject(MatSnackBar);
 
+  protected criterias = signal<Criteria[] | CriteriaFirestore[]>([]);
   protected rows = signal<VoteItem[]>([]);
   protected images = signal<{ preview: string; file?: File }[]>([]);
   protected displayedColumns = signal<string[]>([]);
@@ -61,6 +74,72 @@ export class AdminPanelComponent {
   protected typeControl = new FormControl(VoteTypes.cosplay, {
     nonNullable: true
   });
+
+  readonly addOnBlur = true;
+  readonly separatorKeysCodes = [ENTER, COMMA] as const;
+
+  readonly #deletedCriterias = signal<CriteriaFirestore[]>([]);
+
+  protected addCriteria(event: MatChipInputEvent): void {
+    const value = (event.value || '').trim();
+
+    // Add our criteria
+    if (value) {
+      this.criterias.update(criterias => [...criterias, { name: value }]);
+    }
+
+    // Clear the input value
+    event.chipInput!.clear();
+  }
+
+  protected removeCriteria(criteria: CriteriaFirestore | Criteria): void {
+    this.criterias.update(criterias => {
+      const index = criterias.findIndex(c => c.name === criteria.name);
+      if (index < 0) {
+        return criterias;
+      }
+
+      criterias.splice(index, 1);
+
+      if (filterPredicate<CriteriaFirestore>(criteria)) {
+        this.#deletedCriterias.update(deleted => [...deleted, criteria]);
+      }
+      return [...criterias];
+    });
+  }
+
+  protected editCriteria(
+    criteria: Criteria | CriteriaFirestore,
+    event: MatChipEditedEvent
+  ) {
+    const value = event.value.trim();
+
+    // Remove criteria if it no longer has a name
+    if (!value) {
+      this.removeCriteria(criteria);
+      return;
+    }
+
+    // Edit existing criteria
+    this.criterias.update(criterias => {
+      const index = criterias.findIndex(c => c.name === criteria.name);
+      if (index >= 0) {
+        criterias[index].name = value;
+        return [...criterias];
+      }
+      return criterias;
+    });
+  }
+
+  protected fetchCriterias(): void {
+    this.#firestoreService
+      .getList<CriteriaFirestore>(
+        this.#mapTypeToCriteriaCollection(this.typeControl.getRawValue())
+      )
+      .subscribe(data => {
+        this.criterias.set(data);
+      });
+  }
 
   protected fetchData(): void {
     const collection = this.#mapTypeToCollection(
@@ -192,6 +271,27 @@ export class AdminPanelComponent {
       });
   }
 
+  protected onSaveCriterias(): void {
+    const items: FirestoreBatchWriteItem<Partial<CriteriaFirestore>>[] =
+      this.criterias().map(item => ({
+        operation: (item as CriteriaFirestore)['id']
+          ? Operations.update
+          : Operations.create,
+        docId:
+          ((item as CriteriaFirestore)['id'] as string) ||
+          this.#generateId(this.typeControl.getRawValue()),
+        collectionName: this.#mapTypeToCriteriaCollection(
+          this.typeControl.getRawValue()
+        ),
+        data: { ...item }
+      }));
+    const batchReqs = this.#firestoreService.batchSave(items);
+    batchReqs.subscribe(() => {
+      this.criterias.set([]);
+      this.#snackBar.open('Criteria updated!');
+    });
+  }
+
   #mapTypeToTableHeaders(type: VoteTypes): string[] {
     switch (type) {
       case VoteTypes.cosplay:
@@ -232,6 +332,16 @@ export class AdminPanelComponent {
         return FirestoreCollections.cosplayTeams;
       case VoteTypes.kpop:
         return FirestoreCollections.kPop;
+    }
+  }
+  #mapTypeToCriteriaCollection(type: VoteTypes): FirestoreCollections {
+    switch (type) {
+      case VoteTypes.cosplay:
+        return FirestoreCollections.cosplaySoloCriteria;
+      case VoteTypes.cosplayTeam:
+        return FirestoreCollections.cosplayTeamCriteria;
+      case VoteTypes.kpop:
+        return FirestoreCollections.kPopCriteria;
     }
   }
   #mapTypeToStorageFolder(type: VoteTypes): StorageFolders {

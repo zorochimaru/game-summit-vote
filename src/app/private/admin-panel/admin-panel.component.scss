@@ -11,6 +11,16 @@
   cursor: pointer;
 }
 
+.criterias-input {
+  flex: 1;
+}
+
+.criterias-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .mat-mdc-row .mat-mdc-cell {
   cursor: pointer;
 }

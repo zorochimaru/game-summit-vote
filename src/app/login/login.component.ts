@@ -12,7 +12,6 @@ import {
   Validators
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -27,8 +26,7 @@ import { AuthService } from '../core';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    ReactiveFormsModule,
-    MatButtonToggleModule
+    ReactiveFormsModule
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',

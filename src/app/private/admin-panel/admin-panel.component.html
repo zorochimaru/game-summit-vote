@@ -1,79 +1,125 @@
 <div class="container admin-panel-container">
-  <div class="actions">
-    <mat-button-toggle-group [formControl]="typeControl">
-      @for (item of types(); track $index) {
-        <mat-button-toggle [value]="item">{{ item }}</mat-button-toggle>
+  <div>
+    <div class="actions">
+      <mat-button-toggle-group [formControl]="typeControl">
+        @for (item of types(); track $index) {
+          <mat-button-toggle [value]="item">{{ item }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+      <button type="button" mat-fab (click)="fetchData()">
+        <mat-icon>cloud_download</mat-icon>
+      </button>
+      <input
+        type="file"
+        id="input"
+        hidden
+        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+        (change)="onFileChange($event)" />
+      <button type="button" mat-fab>
+        <label for="input">
+          <mat-icon>upload_file</mat-icon>
+        </label>
+      </button>
+      <input
+        multiple
+        type="file"
+        id="photosInput"
+        hidden
+        accept="image/webp"
+        (change)="setImages($event)" />
+      <button type="button" mat-fab>
+        <label for="photosInput">
+          <mat-icon>photo_library</mat-icon>
+        </label>
+      </button>
+      @if (rows().length) {
+        <button type="button" mat-fab (click)="onSave()">
+          <mat-icon>check</mat-icon>
+        </button>
       }
-    </mat-button-toggle-group>
-    <button type="button" mat-fab (click)="fetchData()">
-      <mat-icon>cloud_download</mat-icon>
-    </button>
-    <input
-      type="file"
-      id="input"
-      hidden
-      accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-      (change)="onFileChange($event)" />
-    <button type="button" mat-fab>
-      <label for="input">
-        <mat-icon>upload_file</mat-icon>
-      </label>
-    </button>
-    <input
-      multiple
-      type="file"
-      id="photosInput"
-      hidden
-      accept="image/webp"
-      (change)="setImages($event)" />
-    <button type="button" mat-fab>
-      <label for="photosInput">
-        <mat-icon>photo_library</mat-icon>
-      </label>
-    </button>
+    </div>
+    <div>
+      <div class="criterias-container">
+        <button type="button" mat-fab (click)="fetchCriterias()">
+          <mat-icon>cloud_download</mat-icon>
+        </button>
+
+        <mat-form-field class="criterias-input" subscriptSizing="dynamic">
+          <mat-label>Criterias</mat-label>
+          <mat-chip-grid
+            #criteriasChipGrid
+            aria-label="Enter reactive form keywords">
+            @for (item of criterias(); track item.name) {
+              <mat-chip-row
+                (removed)="removeCriteria(item)"
+                [editable]="true"
+                (edited)="editCriteria(item, $event)"
+                [aria-description]="'press enter to edit ' + item.name">
+                {{ item.name }}
+                <button matChipRemove>
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </mat-chip-row>
+            }
+            <input
+              placeholder="New criteria..."
+              [matChipInputFor]="criteriasChipGrid"
+              [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+              [matChipInputAddOnBlur]="true"
+              (matChipInputTokenEnd)="addCriteria($event)" />
+          </mat-chip-grid>
+        </mat-form-field>
+
+        <button type="button" mat-fab (click)="onSaveCriterias()">
+          <mat-icon>check</mat-icon>
+        </button>
+      </div>
+    </div>
     @if (rows().length) {
-      <button type="button" mat-flat-button (click)="onSave()">Submit</button>
+      <section class="table-container mat-elevation-z4">
+        <table mat-table [dataSource]="rows()">
+          @for (column of displayedColumns(); track column) {
+            <ng-container [matColumnDef]="column">
+              <th mat-header-cell *matHeaderCellDef>
+                {{ column | titlecase }}
+              </th>
+              <td mat-cell *matCellDef="let element">
+                @if (column === "image") {
+                  <input
+                    type="file"
+                    [id]="'single_image_input_' + element.order"
+                    hidden
+                    accept="image/webp"
+                    (change)="updateImage($event, element.order - 1)" />
+                  @if (images()[element.order - 1].preview; as image) {
+                    <label [for]="'single_image_input_' + element.order">
+                      <img
+                        style="cursor: pointer"
+                        [src]="image"
+                        height="100px" />
+                    </label>
+                  } @else {
+                    <button type="button" mat-fab>
+                      <label [for]="'single_image_input_' + element.order">
+                        <mat-icon>image</mat-icon>
+                      </label>
+                    </button>
+                  }
+                } @else {
+                  {{ element[column] }}
+                }
+              </td>
+            </ng-container>
+          }
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr
+            mat-row
+            class="item-row"
+            *matRowDef="let row; columns: displayedColumns()"
+            (click)="editRow(row)"></tr>
+        </table>
+      </section>
     }
   </div>
-  @if (rows().length) {
-    <section class="table-container mat-elevation-z4">
-      <table mat-table [dataSource]="rows()">
-        @for (column of displayedColumns(); track column) {
-          <ng-container [matColumnDef]="column">
-            <th mat-header-cell *matHeaderCellDef>{{ column | titlecase }}</th>
-            <td mat-cell *matCellDef="let element">
-              @if (column === "image") {
-                <input
-                  type="file"
-                  [id]="'single_image_input_' + element.order"
-                  hidden
-                  accept="image/webp"
-                  (change)="updateImage($event, element.order - 1)" />
-                @if (images()[element.order - 1].preview; as image) {
-                  <label [for]="'single_image_input_' + element.order">
-                    <img style="cursor: pointer" [src]="image" height="100px" />
-                  </label>
-                } @else {
-                  <button type="button" mat-fab>
-                    <label [for]="'single_image_input_' + element.order">
-                      <mat-icon>image</mat-icon>
-                    </label>
-                  </button>
-                }
-              } @else {
-                {{ element[column] }}
-              }
-            </td>
-          </ng-container>
-        }
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
-        <tr
-          mat-row
-          class="item-row"
-          *matRowDef="let row; columns: displayedColumns()"
-          (click)="editRow(row)"></tr>
-      </table>
-    </section>
-  }
 </div>

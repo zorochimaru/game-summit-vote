@@ -4,10 +4,8 @@ export enum FirestoreCollections {
   cosplayTeamResults = 'cosplayTeamResults',
   cosplayTeams = 'cosplayTeams',
   kPop = 'kPop',
-  kPopSoloCriteria = 'kPopSoloCriteria',
-  kPopSoloResults = 'kPopSoloResults',
-  kPopTeamCriteria = 'kPopTeamCriteria',
-  kPopTeamResults = 'kPopTeamResults',
+  kPopCriteria = 'kPopSoloCriteria',
+  kPopResults = 'kPopSoloResults',
   cosplaySolo = 'cosplaySolo',
   cosplaySoloCriteria = 'cosplaySoloCriteria',
   cosplaySoloResults = 'cosplaySoloResults'
