@@ -13,16 +13,27 @@
 
 .selected-item-image {
   flex-shrink: 0;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 
-  & img {
-    width: 100%;
+  swiper-slide {
     height: auto;
+
+    & img {
+      object-fit: contain;
+      max-height: 500px;
+    }
   }
 }
 
 .score-panel {
   flex-grow: 1;
   width: 30%;
+}
+
+.score-slider {
+  width: 100%;
 }
 
 .description-panel {
@@ -57,7 +68,32 @@
 
 .vote-items-container {
   padding: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  height: 300px;
+}
+
+.vote-item {
+  width: 150px;
+  height: 300px;
+}
+
+swiper-slide {
+  width: auto;
+
+  & button {
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: 0.3s transform ease-in-out;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  & img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }

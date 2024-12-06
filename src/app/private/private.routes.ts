@@ -32,6 +32,11 @@ export const privateRoutes: Routes = [
           )
       },
       {
+        path: RouterLinks.results,
+        loadComponent: () =>
+          import('./results/results.component').then(c => c.ResultsComponent)
+      },
+      {
         path: '**',
         redirectTo: RouterLinks.dashboard,
         pathMatch: 'full'

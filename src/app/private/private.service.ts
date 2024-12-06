@@ -4,6 +4,17 @@ import { FirestoreCollections, VoteTypes } from '../core';
 
 @Injectable()
 export class PrivateService {
+  public mapTypeToResultsCollection(type: VoteTypes): FirestoreCollections {
+    switch (type) {
+      case VoteTypes.cosplay:
+        return FirestoreCollections.cosplaySoloResults;
+      case VoteTypes.cosplayTeam:
+        return FirestoreCollections.cosplayTeamResults;
+      case VoteTypes.kpop:
+        return FirestoreCollections.kPopResults;
+    }
+  }
+
   public mapTypeToCollection(type: VoteTypes): FirestoreCollections {
     switch (type) {
       case VoteTypes.cosplay:

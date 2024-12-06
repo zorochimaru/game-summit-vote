@@ -1,4 +1,15 @@
 <div class="cards-container">
+  @if (showResultsLink()) {
+    <mat-card
+      appearance="outlined"
+      class="card-link"
+      matRipple
+      [routerLink]="['/', resultsRouterLink]">
+      <mat-icon>gavel</mat-icon>
+      <span>Results</span>
+    </mat-card>
+  }
+
   @for (item of cardLinks(); track $index) {
     <mat-card
       appearance="outlined"

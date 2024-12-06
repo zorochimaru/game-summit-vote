@@ -22,13 +22,26 @@ import { dashboardCards } from './cards.constant';
 export class DashboardComponent {
   #authService = inject(AuthService);
 
-  protected cardLinks = computed(() => {
+  protected readonly cardLinks = computed(() => {
     const authUser = this.#authService.authUser();
     if (!authUser) {
       return [];
     }
-    return dashboardCards[authUser.role];
+    return dashboardCards[authUser.role].filter(
+      card => !authUser.votedTypes.includes(card.type)
+    );
   });
 
+  protected readonly showResultsLink = computed(() => {
+    const authUser = this.#authService.authUser();
+    if (!authUser) {
+      return [];
+    }
+    return dashboardCards[authUser.role].some(card =>
+      authUser?.votedTypes.includes(card.type)
+    );
+  });
+
+  protected resultsRouterLink = RouterLinks.results;
   protected votePanelRouterLink = RouterLinks.votePanel;
 }

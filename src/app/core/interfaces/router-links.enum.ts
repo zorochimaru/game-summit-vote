@@ -1,6 +1,7 @@
 export enum RouterLinks {
-  login = 'login',
+  adminPanel = 'adminPanel',
   dashboard = 'dashboard',
-  votePanel = 'votePanel',
-  adminPanel = 'adminPanel'
+  login = 'login',
+  results = 'results',
+  votePanel = 'votePanel'
 }

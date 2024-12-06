@@ -4,56 +4,68 @@
       <form [formGroup]="form">
         <div class="score-header">
           <h2>Score</h2>
-          <button type="button" mat-fab (click)="fetchCriteria()">
-            <mat-icon>cloud_download</mat-icon>
-          </button>
-          <button type="button" mat-fab (click)="fetchPersons()">
-            <mat-icon>cloud_download</mat-icon>
-          </button>
-          <button type="button" mat-fab extended (click)="submitResults()">
-            <mat-icon>check</mat-icon>
-            Submit
-          </button>
+          @if (showSubmitButton()) {
+            <button type="button" mat-fab extended (click)="submitResults()">
+              <mat-icon>check</mat-icon>
+              Submit
+            </button>
+          }
         </div>
         <div formArrayName="results">
           @for (item of criterias(); track $index; let i = $index) {
             <div [formGroupName]="i">
-              <app-slider
-                [label]="item.name"
-                formControlName="score"
+              <label for="score-slider">{{ item.name | titlecase }}</label>
+              <mat-slider
+                id="score-slider"
+                class="score-slider"
                 showTickMarks
                 [min]="0"
                 [max]="10"
                 [step]="1"
                 discrete>
-              </app-slider>
+                <input
+                  matSliderThumb
+                  (valueChange)="saveResult(activePerson()!.id)"
+                  formControlName="score" />
+              </mat-slider>
             </div>
           }
         </div>
       </form>
     </div>
     <div class="selected-item-image">
-      <!-- TODO use swiper -->
-      <img src="https://placehold.co/300x500" alt="" />
+      <swiper-container
+        #imageSwiper
+        (swiperslidechange)="onSlideChange()"
+        slides-per-view="1">
+        @for (person of personsList(); track $index) {
+          <swiper-slide>
+            <img class="slider-image" [src]="person.image" alt="" />
+          </swiper-slide>
+        }
+      </swiper-container>
     </div>
     <div class="description-panel">
       <h2>Description</h2>
       <ul>
         @for (item of descriptionInfo(); track $index) {
-          <!-- TODO @for loop -->
           <li>
             <span class="description-label">{{ item.label | titlecase }}:</span>
             <span class="description-value">{{ item.value }}</span>
           </li>
-          <!-- TODO @for loop END-->
         }
       </ul>
     </div>
   </div>
 </div>
 <div class="vote-items-container">
-  <!-- TODO use swiper -->
-  <div class="vote-item">
-    <img src="https://placehold.co/100x200" alt="" />
-  </div>
+  <swiper-container #previewSwiper space-between="10" slides-per-view="auto">
+    @for (person of personsList(); track $index; let i = $index) {
+      <swiper-slide>
+        <button type="button" class="vote-item" (click)="selectActivePerson(i)">
+          <img class="preview-image" [src]="person.image" alt="" />
+        </button>
+      </swiper-slide>
+    }
+  </swiper-container>
 </div>
