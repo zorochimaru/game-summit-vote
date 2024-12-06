@@ -7,5 +7,6 @@ export interface Score {
 export interface CommonResult {
   personId: string;
   personName: string;
+  personImg: string;
   results: Score[];
 }

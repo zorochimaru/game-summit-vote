@@ -1,3 +1,4 @@
+import { Dialog } from '@angular/cdk/dialog';
 import { TitleCasePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -19,7 +20,6 @@ import {
   ReactiveFormsModule
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSliderModule } from '@angular/material/slider';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -70,7 +70,7 @@ export class VotePanelComponent implements OnInit {
   readonly #firestoreService = inject(FirestoreService);
   readonly #authService = inject(AuthService);
   readonly #privateService = inject(PrivateService);
-  readonly #dialog = inject(MatDialog);
+  readonly #dialog = inject(Dialog);
 
   protected imageSwiper = viewChild<ElementRef<SwiperContainer>>('imageSwiper');
   protected previewSwiper =
@@ -105,6 +105,7 @@ export class VotePanelComponent implements OnInit {
   protected form = this.#fb.group({
     personId: this.#fb.control('', { nonNullable: true }),
     personName: this.#fb.control('', { nonNullable: true }),
+    personImg: this.#fb.control('', { nonNullable: true }),
     results: this.#fb.array<TypedForm<Score>>([])
   });
 
@@ -135,10 +136,10 @@ export class VotePanelComponent implements OnInit {
 
   protected selectActivePerson(index: number): void {
     this.imageSwiper()?.nativeElement?.swiper?.slideTo(index);
-    this.onSlideChange();
+    this.onScoreChange();
   }
 
-  protected onSlideChange(): void {
+  protected onScoreChange(): void {
     const newPersonIndex =
       this.imageSwiper()?.nativeElement?.swiper?.activeIndex;
     const newPerson = this.personsList()[newPersonIndex!];
@@ -149,7 +150,8 @@ export class VotePanelComponent implements OnInit {
 
     this.form.patchValue({
       personId: newPerson.id,
-      personName: newPerson.name
+      personName: newPerson.name,
+      personImg: newPerson.image || ''
     });
 
     for (const group of this.resultsControl.controls) {
@@ -161,49 +163,46 @@ export class VotePanelComponent implements OnInit {
   }
 
   protected submitResults(): void {
-    this.#dialog
-      .open(ConfirmDialogComponent)
-      .afterClosed()
-      .subscribe(res => {
-        if (res) {
-          const results = Array.from(this.#finalResults().values());
+    this.#dialog.open(ConfirmDialogComponent).closed.subscribe(res => {
+      if (res) {
+        const results = Array.from(this.#finalResults().values());
 
-          this.#firestoreService
-            .create<CommonResultFirestore>(
-              this.#privateService.mapTypeToResultsCollection(this.type()!),
-              { results }
-            )
-            .pipe(
-              switchMap(() =>
-                this.#firestoreService.update<AuthUser>(
-                  FirestoreCollections.authUsers,
-                  this.#authService.authUser()?.id!,
-                  {
-                    votedTypes: [
-                      ...this.#authService.authUser()?.votedTypes!,
-                      this.type()!
-                    ]
-                  }
-                )
-              ),
-              switchMap(() =>
-                this.#firestoreService.get<AuthUser>(
-                  FirestoreCollections.authUsers,
-                  this.#authService.authUser()!.id
-                )
-              ),
-              filter(Boolean),
-              takeUntilDestroyed(this.#dr)
-            )
-            .subscribe(updatedUser => {
-              this.#authService.setCurrentUser(updatedUser);
-              localStorage.removeItem(
-                `${this.#currentUserId()}-${this.type()}-form`
-              );
-              this.#router.navigate(['/']);
-            });
-        }
-      });
+        this.#firestoreService
+          .create<CommonResultFirestore>(
+            this.#privateService.mapTypeToResultsCollection(this.type()!),
+            { results }
+          )
+          .pipe(
+            switchMap(() =>
+              this.#firestoreService.update<AuthUser>(
+                FirestoreCollections.authUsers,
+                this.#authService.authUser()?.id!,
+                {
+                  votedTypes: [
+                    ...this.#authService.authUser()?.votedTypes!,
+                    this.type()!
+                  ]
+                }
+              )
+            ),
+            switchMap(() =>
+              this.#firestoreService.get<AuthUser>(
+                FirestoreCollections.authUsers,
+                this.#authService.authUser()!.id
+              )
+            ),
+            filter(Boolean),
+            takeUntilDestroyed(this.#dr)
+          )
+          .subscribe(updatedUser => {
+            this.#authService.setCurrentUser(updatedUser);
+            localStorage.removeItem(
+              `${this.#currentUserId()}-${this.type()}-form`
+            );
+            this.#router.navigate(['/']);
+          });
+      }
+    });
   }
 
   protected saveResult(id: string): void {

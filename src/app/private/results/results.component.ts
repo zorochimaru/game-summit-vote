@@ -1,3 +1,4 @@
+import { Dialog } from '@angular/cdk/dialog';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,12 +9,14 @@ import {
   PipeTransform,
   signal
 } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { forkJoin, map } from 'rxjs';
 
 import { FirestoreService, VoteTypes } from '../../core';
 import { CommonResultFirestore } from '../core';
 import { PrivateService } from '../private.service';
+import { ImageDialogComponent } from '../shared';
 
 interface VoteTable {
   voteType: VoteTypes;
@@ -22,6 +25,7 @@ interface VoteTable {
 
 interface PersonScore {
   personName: string;
+  personImg: string;
   totalScores: { [criteriaName: string]: number };
 }
 
@@ -72,6 +76,7 @@ export class OrderByPipe implements PipeTransform {
 export class ResultsComponent implements OnInit {
   readonly #fireStoreService = inject(FirestoreService);
   readonly #privateService = inject(PrivateService);
+  readonly #dialog = inject(Dialog);
 
   protected readonly activeTable = signal<VoteTable | null>(null);
 
@@ -152,9 +157,14 @@ export class ResultsComponent implements OnInit {
       juryResult.results.forEach((personResult: any) => {
         const personId = personResult.personId;
         const personName = personResult.personName;
+        const personImg = personResult.personImg;
 
         if (!personScoresMap[personId]) {
-          personScoresMap[personId] = { personName, totalScores: {} };
+          personScoresMap[personId] = {
+            personName,
+            personImg,
+            totalScores: {}
+          };
         }
 
         personResult.results.forEach((score: any) => {
@@ -182,5 +192,9 @@ export class ResultsComponent implements OnInit {
 
   protected getTotalScore(person: PersonScore): number {
     return Object.values(person.totalScores).reduce((a, b) => a + b, 0);
+  }
+
+  protected openImageDialog(src: string): void {
+    this.#dialog.open(ImageDialogComponent, { data: src });
   }
 }

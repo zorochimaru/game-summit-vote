@@ -22,7 +22,7 @@
                   | orderBy: sortKey() : sortOrder();
                 track $index
               ) {
-                <tr>
+                <tr (click)="openImageDialog(person.personImg)">
                   <td>{{ person.personName }}</td>
                   @for (
                     criteria of getCriteriaNames(activeTable.results);
