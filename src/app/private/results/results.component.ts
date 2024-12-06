@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   OnInit,
   Pipe,
@@ -24,23 +25,6 @@ interface PersonScore {
   totalScores: { [criteriaName: string]: number };
 }
 
-@Pipe({ name: 'orderByTotalScore' })
-export class OrderByTotalScorePipe implements PipeTransform {
-  transform(personScores: PersonScore[]): PersonScore[] {
-    return personScores.slice().sort((a, b) => {
-      const totalA = Object.values(a.totalScores).reduce(
-        (sum, score) => sum + score,
-        0
-      );
-      const totalB = Object.values(b.totalScores).reduce(
-        (sum, score) => sum + score,
-        0
-      );
-      return totalB - totalA;
-    });
-  }
-}
-
 @Pipe({ name: 'orderBy' })
 export class OrderByPipe implements PipeTransform {
   transform(
@@ -52,11 +36,15 @@ export class OrderByPipe implements PipeTransform {
       let valueA =
         sortKey === 'totalScore'
           ? Object.values(a.totalScores).reduce((sum, score) => sum + score, 0)
-          : (a as any)[sortKey];
+          : a.totalScores[sortKey] !== undefined
+            ? a.totalScores[sortKey]
+            : (a as any)[sortKey];
       let valueB =
         sortKey === 'totalScore'
           ? Object.values(b.totalScores).reduce((sum, score) => sum + score, 0)
-          : (b as any)[sortKey];
+          : b.totalScores[sortKey] !== undefined
+            ? b.totalScores[sortKey]
+            : (b as any)[sortKey];
 
       if (typeof valueA === 'string') {
         valueA = valueA.toLowerCase();
@@ -85,13 +73,17 @@ export class ResultsComponent implements OnInit {
   readonly #fireStoreService = inject(FirestoreService);
   readonly #privateService = inject(PrivateService);
 
-  protected readonly tabs = signal(Object.values(VoteTypes));
   protected readonly activeTable = signal<VoteTable | null>(null);
 
-  protected allTabsData!: Map<VoteTypes, PersonScore[]>;
+  protected allTabsData = signal<Map<VoteTypes, PersonScore[]>>(new Map());
+  protected readonly tabs = computed(() => {
+    return Array.from(this.allTabsData().entries())
+      .filter(([_, personScores]) => personScores.length > 0)
+      .map(([voteType, _]) => voteType);
+  });
 
-  protected sortKey = 'totalScore';
-  protected sortOrder: 'asc' | 'desc' = 'desc';
+  protected sortKey = signal('totalScore');
+  protected sortOrder = signal<'asc' | 'desc'>('desc');
 
   public ngOnInit(): void {
     const resultsReqs = Object.values(VoteTypes).map(voteType => {
@@ -105,7 +97,7 @@ export class ResultsComponent implements OnInit {
     forkJoin(resultsReqs)
       .pipe(map(res => this.mapResultsToPersonScoresByVoteType(res)))
       .subscribe(res => {
-        this.allTabsData = new Map(res);
+        this.allTabsData.set(new Map(res));
         this.activeTable.set({
           voteType: this.tabs()[0],
           results: res.get(this.tabs()[0]) || []
@@ -116,16 +108,16 @@ export class ResultsComponent implements OnInit {
   protected tabChanged(index: number): void {
     this.activeTable.set({
       voteType: this.tabs()[index],
-      results: this.allTabsData.get(this.tabs()[index]) || []
+      results: this.allTabsData().get(this.tabs()[index]) || []
     });
   }
 
   protected changeSort(key: string): void {
-    if (this.sortKey === key) {
-      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    if (this.sortKey() === key) {
+      this.sortOrder.update(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
-      this.sortKey = key;
-      this.sortOrder = 'asc';
+      this.sortKey.set(key);
+      this.sortOrder.set('asc');
     }
     this.activeTable.update(table => {
       if (table) {

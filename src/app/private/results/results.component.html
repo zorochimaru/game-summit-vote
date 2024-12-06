@@ -2,37 +2,40 @@
   @for (tab of tabs(); track $index) {
     <mat-tab [label]="tab">
       @if (activeTable(); as activeTable) {
-        <table>
-          <thead>
-            <tr>
-              <th (click)="changeSort('personName')">Person Name</th>
-              @for (
-                criteria of getCriteriaNames(activeTable.results);
-                track $index
-              ) {
-                <th (click)="changeSort(criteria)">{{ criteria }}</th>
-              }
-              <th (click)="changeSort('totalScore')">Total Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (
-              person of activeTable.results | orderBy: sortKey : sortOrder;
-              track $index
-            ) {
+        <div class="table-container">
+          <table class="table">
+            <thead>
               <tr>
-                <td>{{ person.personName }}</td>
+                <th (click)="changeSort('personName')">Person Name</th>
                 @for (
                   criteria of getCriteriaNames(activeTable.results);
                   track $index
                 ) {
-                  <td>{{ person.totalScores[criteria] || 0 }}</td>
+                  <th (click)="changeSort(criteria)">{{ criteria }}</th>
                 }
-                <td>{{ getTotalScore(person) }}</td>
+                <th (click)="changeSort('totalScore')">Total Score</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (
+                person of activeTable.results
+                  | orderBy: sortKey() : sortOrder();
+                track $index
+              ) {
+                <tr>
+                  <td>{{ person.personName }}</td>
+                  @for (
+                    criteria of getCriteriaNames(activeTable.results);
+                    track $index
+                  ) {
+                    <td>{{ person.totalScores[criteria] || 0 }}</td>
+                  }
+                  <td>{{ getTotalScore(person) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </mat-tab>
   }
