@@ -1,42 +1,24 @@
 <mat-tab-group (selectedIndexChange)="tabChanged($event)">
   @for (tab of tabs(); track $index) {
     <mat-tab [label]="tab">
-      @if (activeTable(); as activeTable) {
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th (click)="changeSort('personName')">Person Name</th>
-                @for (
-                  criteria of getCriteriaNames(activeTable.results);
-                  track $index
-                ) {
-                  <th (click)="changeSort(criteria)">{{ criteria }}</th>
-                }
-                <th (click)="changeSort('totalScore')">Total Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (
-                person of activeTable.results
-                  | orderBy: sortKey() : sortOrder();
-                track $index
-              ) {
-                <tr (click)="openImageDialog(person.personImg)">
-                  <td>{{ person.personName }}</td>
-                  @for (
-                    criteria of getCriteriaNames(activeTable.results);
-                    track $index
-                  ) {
-                    <td>{{ person.totalScores[criteria] || 0 }}</td>
-                  }
-                  <td>{{ getTotalScore(person) }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
+      <table
+        mat-table
+        matSort
+        (matSortChange)="sortChange($event)"
+        [dataSource]="dataSource()"
+        class="mat-elevation-z8">
+        @for (column of displayedColumns(); track column) {
+          <ng-container [matColumnDef]="column">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              {{ column }}
+            </th>
+            <td mat-cell *matCellDef="let element">{{ element[column] }}</td>
+          </ng-container>
+        }
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+      </table>
     </mat-tab>
   }
 </mat-tab-group>

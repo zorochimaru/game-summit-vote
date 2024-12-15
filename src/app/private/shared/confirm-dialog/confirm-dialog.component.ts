@@ -1,24 +1,18 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import {
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogTitle
-} from '@angular/material/dialog';
+import { DialogModule, DialogRef } from '@angular/cdk/dialog';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [
-    MatButtonModule,
-    MatDialogActions,
-    MatDialogClose,
-    MatDialogTitle,
-    MatDialogContent,
-    MatButtonModule
-  ],
+  imports: [DialogModule, MatButton],
   templateUrl: './confirm-dialog.component.html',
   styleUrl: './confirm-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ConfirmDialogComponent {}
+export class ConfirmDialogComponent {
+  #dialogRef = inject(DialogRef);
+
+  protected onSubmit(value: boolean): void {
+    this.#dialogRef.close(value);
+  }
+}

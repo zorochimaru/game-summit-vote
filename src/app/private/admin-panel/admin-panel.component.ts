@@ -1,3 +1,4 @@
+import { Dialog } from '@angular/cdk/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TitleCasePipe } from '@angular/common';
 import {
@@ -20,11 +21,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { filter, forkJoin, of, switchMap } from 'rxjs';
 import { read, utils } from 'xlsx';
 
 import {
+  AuthService,
+  AuthUser,
+  FirestoreBatchDeleteItem,
   FirestoreBatchWriteItem,
+  FirestoreCollections,
   FirestoreService,
   Operations,
   StorageFolders,
@@ -42,6 +48,7 @@ import {
   KpopFirestore
 } from '../core';
 import { PrivateService } from '../private.service';
+import { ConfirmDialogComponent } from '../shared';
 
 type VoteItem = Kpop | Cosplay;
 
@@ -55,7 +62,8 @@ type VoteItem = Kpop | Cosplay;
     MatTableModule,
     TitleCasePipe,
     MatChipsModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatTooltipModule
   ],
   templateUrl: './admin-panel.component.html',
   styleUrl: './admin-panel.component.scss',
@@ -63,10 +71,12 @@ type VoteItem = Kpop | Cosplay;
 })
 export class AdminPanelComponent {
   readonly #firestoreService = inject(FirestoreService);
+  readonly #authService = inject(AuthService);
   readonly #dr = inject(DestroyRef);
   readonly #upload = inject(UploadService);
   readonly #snackBar = inject(MatSnackBar);
   readonly #privateService = inject(PrivateService);
+  readonly #dialog = inject(Dialog);
 
   protected criterias = signal<Criteria[] | CriteriaFirestore[]>([]);
   protected rows = signal<VoteItem[]>([]);
@@ -213,7 +223,10 @@ export class AdminPanelComponent {
         const reader = new FileReader();
         reader.onload = () => {
           const base64 = reader.result as string;
-          this.images.update(prev => [...prev, { preview: base64, file }]);
+          this.images.update(prev => [
+            ...prev,
+            { preview: base64 || '', file }
+          ]);
         };
         reader.readAsDataURL(file);
       }
@@ -239,11 +252,23 @@ export class AdminPanelComponent {
     }
   }
 
-  protected editRow(data: unknown): void {
-    console.log(data);
+  protected deleteResults(): void {
+    this.#dialog.open(ConfirmDialogComponent).closed.subscribe(res => {
+      if (res) {
+        this.#deleteAllResults();
+      }
+    });
   }
 
-  protected onSave(): void {
+  protected deleteAllData(): void {
+    this.#dialog.open(ConfirmDialogComponent).closed.subscribe(res => {
+      if (res) {
+        this.#deleteAllDataInCollection(this.typeControl.getRawValue());
+      }
+    });
+  }
+
+  protected onSaveData(): void {
     const imageRequests = this.images().map(img =>
       img.file
         ? this.#upload.upload(
@@ -277,7 +302,7 @@ export class AdminPanelComponent {
         this.rows.set([]);
         this.displayedColumns.set([]);
         this.images.set([]);
-        this.#snackBar.open('Data updated!');
+        this.#snackBar.open('Data updated!', 'Ok', { duration: 3000 });
       });
   }
 
@@ -295,10 +320,20 @@ export class AdminPanelComponent {
         ),
         data: { ...item }
       }));
+    const deleteItems: FirestoreBatchDeleteItem[] =
+      this.#deletedCriterias().map(item => ({
+        operation: Operations.delete,
+        docId: item.id,
+        collectionName: this.#privateService.mapTypeToCriteriaCollection(
+          this.typeControl.getRawValue()
+        )
+      }));
+    const deleteReqs = this.#firestoreService.batchSave(deleteItems);
     const batchReqs = this.#firestoreService.batchSave(items);
-    batchReqs.subscribe(() => {
+
+    forkJoin([batchReqs, deleteReqs]).subscribe(() => {
       this.criterias.set([]);
-      this.#snackBar.open('Criteria updated!');
+      this.#snackBar.open('Criteria updated!', 'Ok', { duration: 3000 });
     });
   }
 
@@ -307,8 +342,8 @@ export class AdminPanelComponent {
       case VoteTypes.cosplay:
         return [
           'name',
-          'count',
           'fandom',
+          'registrationType',
           'fandomType',
           'costumeType',
           'image'
@@ -323,14 +358,7 @@ export class AdminPanelComponent {
           'image'
         ];
       case VoteTypes.kpop:
-        return [
-          'name',
-          'count',
-          'fandom',
-          'fandomType',
-          'costumeType',
-          'image'
-        ];
+        return ['name', 'count', 'image'];
     }
   }
 
@@ -349,5 +377,80 @@ export class AdminPanelComponent {
     return this.#firestoreService.autoId(
       this.#privateService.mapTypeToCollection(type)
     );
+  }
+
+  #deleteAllDataInCollection(type: VoteTypes): void {
+    this.#firestoreService
+      .getList(this.#privateService.mapTypeToCollection(type))
+      .pipe(
+        filter(Boolean),
+        switchMap(res => {
+          const items: FirestoreBatchDeleteItem[] = res.map(item => ({
+            docId: item.id || '',
+            collectionName: this.#privateService.mapTypeToCollection(
+              this.typeControl.getRawValue()
+            ),
+            operation: Operations.delete
+          }));
+          const batchReqs = this.#firestoreService.batchSave(items);
+          return batchReqs;
+        })
+      )
+      .subscribe(() => {
+        this.rows.set([]);
+        this.displayedColumns.set([]);
+        this.images.set([]);
+        this.#snackBar.open('Data deleted!', 'Ok', { duration: 3000 });
+      });
+  }
+
+  #deleteAllResults(): void {
+    const collections = Object.values(VoteTypes).map(type =>
+      this.#privateService.mapTypeToResultsCollection(type)
+    );
+
+    const requests = collections.map(collection =>
+      this.#firestoreService.getList(collection).pipe(
+        switchMap(list => {
+          const items: FirestoreBatchDeleteItem[] = list.map(item => ({
+            docId: item.id || '',
+            collectionName: collection,
+            operation: Operations.delete
+          }));
+          return this.#firestoreService.batchSave(items);
+        })
+      )
+    );
+
+    const clearAuthFlagsRequest = this.#firestoreService
+      .getList<AuthUser>(FirestoreCollections.authUsers)
+      .pipe(
+        switchMap(list => {
+          const items: FirestoreBatchWriteItem<Partial<AuthUser>>[] = list.map(
+            item => ({
+              docId: item.id,
+              collectionName: FirestoreCollections.authUsers,
+              operation: Operations.update,
+              data: { votedTypes: [] }
+            })
+          );
+          return this.#firestoreService.batchSave(items);
+        })
+      );
+
+    forkJoin([...requests, clearAuthFlagsRequest])
+      .pipe(
+        switchMap(() =>
+          this.#firestoreService.get<AuthUser>(
+            FirestoreCollections.authUsers,
+            this.#authService.authUser()!.id
+          )
+        ),
+        filter(Boolean)
+      )
+      .subscribe(updatedUser => {
+        this.#authService.setCurrentUser(updatedUser);
+        this.#snackBar.open('Results deleted!', 'Ok', { duration: 3000 });
+      });
   }
 }

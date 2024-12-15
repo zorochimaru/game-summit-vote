@@ -1,27 +1,21 @@
-import { Dialog } from '@angular/cdk/dialog';
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   computed,
   inject,
   OnInit,
-  Pipe,
-  PipeTransform,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { forkJoin, map } from 'rxjs';
 
 import { FirestoreService, VoteTypes } from '../../core';
 import { CommonResultFirestore } from '../core';
 import { PrivateService } from '../private.service';
-import { ImageDialogComponent } from '../shared';
-
-interface VoteTable {
-  voteType: VoteTypes;
-  results: PersonScore[];
-}
 
 interface PersonScore {
   personName: string;
@@ -29,66 +23,44 @@ interface PersonScore {
   totalScores: { [criteriaName: string]: number };
 }
 
-@Pipe({ name: 'orderBy' })
-export class OrderByPipe implements PipeTransform {
-  transform(
-    personScores: PersonScore[],
-    sortKey: string,
-    sortOrder: 'asc' | 'desc'
-  ): PersonScore[] {
-    return personScores.slice().sort((a, b) => {
-      let valueA =
-        sortKey === 'totalScore'
-          ? Object.values(a.totalScores).reduce((sum, score) => sum + score, 0)
-          : a.totalScores[sortKey] !== undefined
-            ? a.totalScores[sortKey]
-            : (a as any)[sortKey];
-      let valueB =
-        sortKey === 'totalScore'
-          ? Object.values(b.totalScores).reduce((sum, score) => sum + score, 0)
-          : b.totalScores[sortKey] !== undefined
-            ? b.totalScores[sortKey]
-            : (b as any)[sortKey];
-
-      if (typeof valueA === 'string') {
-        valueA = valueA.toLowerCase();
-        valueB = valueB.toLowerCase();
-      }
-
-      if (valueA < valueB) {
-        return sortOrder === 'asc' ? -1 : 1;
-      } else if (valueA > valueB) {
-        return sortOrder === 'asc' ? 1 : -1;
-      } else {
-        return 0;
-      }
-    });
-  }
-}
-
 @Component({
   selector: 'app-results',
-  imports: [MatTabsModule, OrderByPipe],
+  imports: [MatTabsModule, MatTableModule, MatSortModule],
   templateUrl: './results.component.html',
   styleUrl: './results.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ResultsComponent implements OnInit {
+export class ResultsComponent implements OnInit, AfterViewInit {
   readonly #fireStoreService = inject(FirestoreService);
   readonly #privateService = inject(PrivateService);
-  readonly #dialog = inject(Dialog);
 
-  protected readonly activeTable = signal<VoteTable | null>(null);
+  protected sort = viewChild<MatSort>(MatSort);
 
-  protected allTabsData = signal<Map<VoteTypes, PersonScore[]>>(new Map());
   protected readonly tabs = computed(() => {
-    return Array.from(this.allTabsData().entries())
+    return Array.from(this.#allTabsData().entries())
       .filter(([_, personScores]) => personScores.length > 0)
       .map(([voteType, _]) => voteType);
   });
 
-  protected sortKey = signal('totalScore');
-  protected sortOrder = signal<'asc' | 'desc'>('desc');
+  protected dataSource = computed(
+    () =>
+      new MatTableDataSource<Record<string, string | number>>(
+        this.#activeScore()
+      )
+  );
+
+  protected displayedColumns = computed(() => [
+    ...Object.keys(this.#activeScore()?.[0] || {})
+  ]);
+
+  readonly #activeScore = computed(() => {
+    return this.#mapPersonScoresToArray(
+      this.#allTabsData().get(this.tabs()[this.#activeTabIndex()]) || []
+    );
+  });
+
+  readonly #activeTabIndex = signal(0);
+  readonly #allTabsData = signal<Map<VoteTypes, PersonScore[]>>(new Map());
 
   public ngOnInit(): void {
     const resultsReqs = Object.values(VoteTypes).map(voteType => {
@@ -102,37 +74,27 @@ export class ResultsComponent implements OnInit {
     forkJoin(resultsReqs)
       .pipe(map(res => this.mapResultsToPersonScoresByVoteType(res)))
       .subscribe(res => {
-        this.allTabsData.set(new Map(res));
-        this.activeTable.set({
-          voteType: this.tabs()[0],
-          results: res.get(this.tabs()[0]) || []
-        });
+        this.#allTabsData.set(new Map(res));
       });
   }
 
-  protected tabChanged(index: number): void {
-    this.activeTable.set({
-      voteType: this.tabs()[index],
-      results: this.allTabsData().get(this.tabs()[index]) || []
+  public ngAfterViewInit() {
+    this.dataSource().sort = this.sort() || null;
+  }
+
+  protected sortChange(sort: Sort): void {
+    if (sort.direction === '') {
+      this.dataSource().data = this.#activeScore();
+      return;
+    }
+    this.dataSource().data = this.#activeScore().toSorted((a, b) => {
+      const isAsc = sort.direction === 'asc';
+      return this.#compare(a[sort.active], b[sort.active], isAsc);
     });
   }
 
-  protected changeSort(key: string): void {
-    if (this.sortKey() === key) {
-      this.sortOrder.update(prev => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortKey.set(key);
-      this.sortOrder.set('asc');
-    }
-    this.activeTable.update(table => {
-      if (table) {
-        return {
-          ...table,
-          results: [...table.results] // Trigger re-evaluation of the sorted results
-        };
-      }
-      return table;
-    });
+  protected tabChanged(index: number): void {
+    this.#activeTabIndex.set(index);
   }
 
   private mapResultsToPersonScoresByVoteType(
@@ -180,21 +142,19 @@ export class ResultsComponent implements OnInit {
     return Object.values(personScoresMap);
   }
 
-  protected getCriteriaNames(personScores: PersonScore[]): string[] {
-    const criteriaSet = new Set<string>();
-    personScores.forEach(personScore => {
-      Object.keys(personScore.totalScores).forEach(criteria => {
-        criteriaSet.add(criteria);
-      });
+  protected openDetails(): void {}
+
+  #mapPersonScoresToArray(
+    personScores: PersonScore[]
+  ): Record<string, string | number>[] {
+    return personScores.map(personScore => {
+      const { personName, totalScores } = personScore;
+      const totalScore = Object.values(totalScores).reduce((a, b) => a + b, 0);
+      return { personName, totalScore, ...totalScores };
     });
-    return Array.from(criteriaSet);
   }
 
-  protected getTotalScore(person: PersonScore): number {
-    return Object.values(person.totalScores).reduce((a, b) => a + b, 0);
-  }
-
-  protected openImageDialog(src: string): void {
-    this.#dialog.open(ImageDialogComponent, { data: src });
+  #compare(a: number | string, b: number | string, isAsc: boolean) {
+    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
   }
 }
