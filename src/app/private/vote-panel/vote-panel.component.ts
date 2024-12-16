@@ -43,7 +43,7 @@ import {
 } from '../core';
 import { CommonVoteItemFirestore } from '../core/interfaces/common-vote-item-firestore.interface';
 import { PrivateService } from '../private.service';
-import { ConfirmDialogComponent } from '../shared';
+import { ConfirmDialogComponent, ImageDialogComponent } from '../shared';
 
 type TResultsArray = FormArray<TypedForm<Score>>;
 
@@ -84,6 +84,11 @@ export class VotePanelComponent implements OnInit {
 
   protected readonly activePerson = signal<CommonVoteItemFirestore | null>(
     null
+  );
+
+  protected readonly activePersonIndex = computed(
+    () =>
+      this.personsList().findIndex(x => this.activePerson()?.id === x.id) || 0
   );
 
   protected readonly descriptionInfo = signal<
@@ -134,6 +139,12 @@ export class VotePanelComponent implements OnInit {
     );
   }
 
+  protected zoomImage(src: string): void {
+    this.#dialog.open(ImageDialogComponent, {
+      data: src
+    });
+  }
+
   protected selectActivePerson(index: number): void {
     this.imageSwiper()?.nativeElement?.swiper?.slideTo(index);
     this.onScoreChange();
@@ -144,7 +155,7 @@ export class VotePanelComponent implements OnInit {
       this.imageSwiper()?.nativeElement?.swiper?.activeIndex;
     const newPerson = this.personsList()[newPersonIndex!];
     this.activePerson.set(newPerson);
-
+    this.previewSwiper()?.nativeElement?.swiper?.slideTo(newPersonIndex || 0);
     const mappedDescription = this.#mapPersonDescription(newPerson);
     this.descriptionInfo.set(mappedDescription);
 

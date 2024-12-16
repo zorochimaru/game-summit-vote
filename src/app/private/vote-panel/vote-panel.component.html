@@ -40,7 +40,11 @@
         slides-per-view="1">
         @for (person of personsList(); track $index) {
           <swiper-slide>
-            <img class="slider-image" [src]="person.image" alt="" />
+            <img
+              class="slider-image"
+              (click)="zoomImage(person.image || '')"
+              [src]="person.image"
+              alt="" />
           </swiper-slide>
         }
       </swiper-container>
@@ -59,10 +63,19 @@
   </div>
 </div>
 <div class="vote-items-container">
-  <swiper-container #previewSwiper space-between="10" slides-per-view="auto">
+  <swiper-container
+    #previewSwiper
+    space-between="10"
+    centered-slides="true"
+    centered-slides-bounds="true"
+    slides-per-view="auto">
     @for (person of personsList(); track $index; let i = $index) {
       <swiper-slide>
-        <button type="button" class="vote-item" (click)="selectActivePerson(i)">
+        <button
+          type="button"
+          [class.active-card]="activePersonIndex() === i"
+          class="vote-item"
+          (click)="selectActivePerson(i)">
           <img class="preview-image" [src]="person.image" alt="" />
         </button>
       </swiper-slide>

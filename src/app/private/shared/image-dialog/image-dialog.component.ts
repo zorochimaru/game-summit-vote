@@ -1,14 +1,19 @@
-import { Dialog, DIALOG_DATA, DialogModule } from '@angular/cdk/dialog';
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { MatDialogContent } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-image-dialog',
-  imports: [MatDialogContent],
+  imports: [],
   templateUrl: './image-dialog.component.html',
   styleUrl: './image-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ImageDialogComponent {
+  #dialogRef = inject(DialogRef);
+
   protected readonly src = inject<string>(DIALOG_DATA);
+
+  protected close(): void {
+    this.#dialogRef.close();
+  }
 }

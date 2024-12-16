@@ -1,3 +1,4 @@
+import { Dialog } from '@angular/cdk/dialog';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -16,6 +17,7 @@ import { forkJoin, map } from 'rxjs';
 import { FirestoreService, VoteTypes } from '../../core';
 import { CommonResultFirestore } from '../core';
 import { PrivateService } from '../private.service';
+import { InfoDialogComponent } from './info-dialog/info-dialog.component';
 
 interface PersonScore {
   personName: string;
@@ -33,6 +35,7 @@ interface PersonScore {
 export class ResultsComponent implements OnInit, AfterViewInit {
   readonly #fireStoreService = inject(FirestoreService);
   readonly #privateService = inject(PrivateService);
+  readonly #dialog = inject(Dialog);
 
   protected sort = viewChild<MatSort>(MatSort);
 
@@ -142,7 +145,9 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     return Object.values(personScoresMap);
   }
 
-  protected openDetails(): void {}
+  protected openDetails(row: any): void {
+    this.#dialog.open(InfoDialogComponent, { data: row });
+  }
 
   #mapPersonScoresToArray(
     personScores: PersonScore[]

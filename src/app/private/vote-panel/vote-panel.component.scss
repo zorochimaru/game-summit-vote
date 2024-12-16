@@ -32,6 +32,11 @@
   width: 30%;
 }
 
+.active-card {
+  transform: scale(0.9);
+  outline: 2px solid red;
+}
+
 .score-slider {
   width: 100%;
 }
