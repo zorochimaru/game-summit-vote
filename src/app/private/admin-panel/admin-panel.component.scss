@@ -48,3 +48,36 @@ table {
   margin-top: 20px;
   height: 500px;
 }
+
+@media screen and (max-width: 768px) {
+  .admin-panel-container {
+    margin-top: 0;
+    height: calc(100svh - var(--header-height));
+    display: flex;
+    flex-direction: column;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .table-container {
+    flex: 1;
+  }
+
+  table {
+    margin-top: 0;
+    height: auto;
+  }
+
+  .mat-mdc-row .mat-mdc-cell {
+    border-bottom: 1px solid transparent;
+    border-top: 1px solid transparent;
+    cursor: default;
+  }
+
+  .mat-mdc-row:hover .mat-mdc-cell {
+    border-color: currentColor;
+  }
+}

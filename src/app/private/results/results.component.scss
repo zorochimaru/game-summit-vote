@@ -16,6 +16,41 @@
   text-align: left;
 }
 
+.cdk-cell {
+  font-size: 20px;
+  padding-block: 10px;
+}
+
 .mat-column-personName {
   min-width: 200px;
+}
+
+@media screen and (max-width: 768px) {
+  .table-container {
+    margin-top: 0;
+    height: calc(100svh - var(--header-height) - 48px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .table {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+
+  .cdk-cell {
+    font-size: 20px;
+    padding-block: 10px;
+  }
+
+  .mat-column-personName {
+    min-width: 200px;
+  }
 }

@@ -23,7 +23,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSliderModule } from '@angular/material/slider';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter, forkJoin, map, Observable, switchMap } from 'rxjs';
+import { combineLatest, filter, map, Observable, switchMap } from 'rxjs';
 import { SwiperContainer } from 'swiper/element';
 
 import {
@@ -126,6 +126,19 @@ export class VotePanelComponent implements OnInit {
     this.#fetchData();
   }
 
+  protected isPersonVoted(personId: string): boolean {
+    return this.#finalResults().has(personId);
+  }
+
+  protected skipPerson(): void {
+    this.#dialog.open(ConfirmDialogComponent).closed.subscribe(res => {
+      if (res) {
+        this.saveResult(this.activePerson()?.id!, true);
+        this.selectActivePerson(this.activePersonIndex() + 1);
+      }
+    });
+  }
+
   protected fetchPersons(): Observable<CommonVoteItemFirestore[]> {
     return this.#firestoreService.getList<CommonVoteItemFirestore>(
       this.#privateService.mapTypeToCollection(this.type()!),
@@ -141,7 +154,8 @@ export class VotePanelComponent implements OnInit {
 
   protected zoomImage(src: string): void {
     this.#dialog.open(ImageDialogComponent, {
-      data: src
+      data: src,
+      autoFocus: '__non_existing_element__'
     });
   }
 
@@ -216,7 +230,12 @@ export class VotePanelComponent implements OnInit {
     });
   }
 
-  protected saveResult(id: string): void {
+  protected saveResult(id: string, skip?: boolean): void {
+    if (skip) {
+      for (const control of this.form.controls.results.controls) {
+        control.patchValue({ score: 0 });
+      }
+    }
     const result = this.form.getRawValue();
     this.#finalResults.update(prev => {
       prev.set(id, result);
@@ -262,11 +281,15 @@ export class VotePanelComponent implements OnInit {
   }
 
   #fetchData(): void {
-    forkJoin([this.fetchPersons(), this.fetchCriteria()])
+    combineLatest([
+      this.#authService.currentUser$,
+      this.fetchPersons(),
+      this.fetchCriteria()
+    ])
       .pipe(takeUntilDestroyed(this.#dr))
-      .subscribe(([persons, criterias]) => {
+      .subscribe(([currentUser, persons, criterias]) => {
         const formCache = localStorage.getItem(
-          `${this.#currentUserId()}-${this.type()}-form`
+          `${currentUser?.uid}-${this.type()}-form`
         );
 
         if (formCache) {
@@ -281,7 +304,8 @@ export class VotePanelComponent implements OnInit {
         // Set active person
         this.form.patchValue({
           personId: persons[0].id,
-          personName: persons[0].name
+          personName: persons[0].name,
+          personImg: persons[0].image || ''
         });
         this.activePerson.set(persons[0]);
 

@@ -17,7 +17,7 @@ import { forkJoin, map } from 'rxjs';
 import { FirestoreService, VoteTypes } from '../../core';
 import { CommonResultFirestore } from '../core';
 import { PrivateService } from '../private.service';
-import { InfoDialogComponent } from './info-dialog/info-dialog.component';
+import { ImageDialogComponent } from '../shared';
 
 interface PersonScore {
   personName: string;
@@ -52,9 +52,11 @@ export class ResultsComponent implements OnInit, AfterViewInit {
       )
   );
 
-  protected displayedColumns = computed(() => [
-    ...Object.keys(this.#activeScore()?.[0] || {})
-  ]);
+  protected displayedColumns = computed(() =>
+    [...Object.keys(this.#activeScore()?.[0] || {})].filter(
+      col => col !== 'personImg'
+    )
+  );
 
   readonly #activeScore = computed(() => {
     return this.#mapPersonScoresToArray(
@@ -101,7 +103,10 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   }
 
   private mapResultsToPersonScoresByVoteType(
-    results: any[]
+    results: {
+      voteType: VoteTypes;
+      juryResults: CommonResultFirestore[];
+    }[]
   ): Map<VoteTypes, PersonScore[]> {
     const resultsMap = new Map<VoteTypes, PersonScore[]>();
 
@@ -115,11 +120,13 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     return resultsMap;
   }
 
-  private mapResultsToPersonScores(juryResults: any[]): PersonScore[] {
+  private mapResultsToPersonScores(
+    juryResults: CommonResultFirestore[]
+  ): PersonScore[] {
     const personScoresMap: { [personId: string]: PersonScore } = {};
 
     juryResults.forEach(juryResult => {
-      juryResult.results.forEach((personResult: any) => {
+      juryResult.results.forEach(personResult => {
         const personId = personResult.personId;
         const personName = personResult.personName;
         const personImg = personResult.personImg;
@@ -132,7 +139,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           };
         }
 
-        personResult.results.forEach((score: any) => {
+        personResult.results.forEach(score => {
           const criteriaName = score.criteriaName;
           if (!personScoresMap[personId].totalScores[criteriaName]) {
             personScoresMap[personId].totalScores[criteriaName] = 0;
@@ -146,16 +153,19 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   }
 
   protected openDetails(row: any): void {
-    this.#dialog.open(InfoDialogComponent, { data: row });
+    this.#dialog.open(ImageDialogComponent, {
+      data: row.personImg,
+      autoFocus: '__non_existing_element__'
+    });
   }
 
   #mapPersonScoresToArray(
     personScores: PersonScore[]
   ): Record<string, string | number>[] {
     return personScores.map(personScore => {
-      const { personName, totalScores } = personScore;
+      const { personName, personImg, totalScores } = personScore;
       const totalScore = Object.values(totalScores).reduce((a, b) => a + b, 0);
-      return { personName, totalScore, ...totalScores };
+      return { personName, personImg, totalScore, ...totalScores };
     });
   }
 

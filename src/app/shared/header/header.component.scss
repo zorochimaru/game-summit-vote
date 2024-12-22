@@ -1,3 +1,7 @@
+:host {
+  height: var(--header-height);
+}
+
 .right-panel {
   margin-left: auto;
   display: flex;

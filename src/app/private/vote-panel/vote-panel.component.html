@@ -4,12 +4,19 @@
       <form [formGroup]="form">
         <div class="score-header">
           <h2>Score</h2>
-          @if (showSubmitButton()) {
-            <button type="button" mat-fab extended (click)="submitResults()">
-              <mat-icon>check</mat-icon>
-              Submit
-            </button>
-          }
+          <div class="actions">
+            @if (showSubmitButton()) {
+              <button type="button" mat-fab extended (click)="submitResults()">
+                <mat-icon>check</mat-icon>
+                Submit
+              </button>
+            } @else {
+              <button type="button" mat-fab extended (click)="skipPerson()">
+                <mat-icon>close</mat-icon>
+                SKIP🤷‍♂️
+              </button>
+            }
+          </div>
         </div>
         <div formArrayName="results">
           @for (item of criterias(); track $index; let i = $index) {
@@ -73,6 +80,7 @@
       <swiper-slide>
         <button
           type="button"
+          [class.voted-card]="isPersonVoted(person.id)"
           [class.active-card]="activePersonIndex() === i"
           class="vote-item"
           (click)="selectActivePerson(i)">
