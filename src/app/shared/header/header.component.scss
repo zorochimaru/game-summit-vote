@@ -1,16 +1,26 @@
 :host {
+  position: relative;
   height: var(--header-height);
   border-bottom: 1px solid var(--border-default);
 }
 
 .logo {
-  margin-left: auto;
   display: flex;
+  margin-inline: auto;
 }
 
 .right-panel {
-  margin-left: auto;
+  right: 0;
+  position: absolute;
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+@media screen and (max-width: 600px) {
+  :host {
+    .logo {
+      margin-inline: 0;
+    }
+  }
 }
