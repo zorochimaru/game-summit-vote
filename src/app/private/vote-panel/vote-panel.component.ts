@@ -153,6 +153,9 @@ export class VotePanelComponent implements OnInit {
   }
 
   protected zoomImage(src: string): void {
+    if (!src) {
+      return;
+    }
     this.#dialog.open(ImageDialogComponent, {
       data: src,
       autoFocus: '__non_existing_element__'

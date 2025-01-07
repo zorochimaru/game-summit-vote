@@ -47,11 +47,15 @@
         slides-per-view="1">
         @for (person of personsList(); track $index) {
           <swiper-slide>
-            <img
-              class="slider-image"
-              (click)="zoomImage(person.image || '')"
-              [src]="person.image"
-              alt="" />
+            <div
+              class="active-image-container"
+              [style.cursor]="!person.image ? 'default' : 'pointer'">
+              <img
+                [class.small-image]="!person.image"
+                (click)="zoomImage(person.image || '')"
+                [src]="person.image || 'assets/images/small-logo.svg'"
+                alt="" />
+            </div>
           </swiper-slide>
         }
       </swiper-container>
@@ -84,7 +88,12 @@
           [class.active-card]="activePersonIndex() === i"
           class="vote-item"
           (click)="selectActivePerson(i)">
-          <img class="preview-image" [src]="person.image" alt="" />
+          <span class="order">{{ person.order }}</span>
+          <img
+            class="preview-image"
+            [class.small-image]="!person.image"
+            [src]="person.image || 'assets/images/small-logo.svg'"
+            alt="" />
         </button>
       </swiper-slide>
     }

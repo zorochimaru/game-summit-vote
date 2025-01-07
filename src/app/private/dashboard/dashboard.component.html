@@ -5,7 +5,7 @@
       class="card-link"
       matRipple
       [routerLink]="['/', resultsRouterLink]">
-      <mat-icon>gavel</mat-icon>
+      <mat-icon>emoji_events</mat-icon>
       <span>Results</span>
     </mat-card>
   }
@@ -17,7 +17,7 @@
       matRipple
       [routerLink]="['/', votePanelRouterLink]"
       [queryParams]="{ voteType: item.type }">
-      <mat-icon>{{ item.icon }}</mat-icon>
+      <img [src]="'assets/images/' + item.icon" alt="" />
       <span>{{ item.title }}</span>
     </mat-card>
   }

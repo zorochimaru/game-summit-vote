@@ -1,5 +1,7 @@
-<mat-toolbar>
-  <a [routerLink]="['/']" mat-button> <h1>Gamesummit Vote</h1> </a>
+<mat-toolbar class="md-tall">
+  <a [routerLink]="['/']" class="logo">
+    <img height="50px" src="assets/images/logo.svg" alt="" />
+  </a>
 
   <div class="right-panel">
     @if (isAdmin()) {

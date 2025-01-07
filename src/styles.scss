@@ -1,32 +1,27 @@
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
 @use '@angular/material' as mat;
-@use 'styles/theme';
+@use 'styles/custom-variables';
 @use 'styles/fonts';
 @use 'styles/container';
 @use 'styles/animations';
+@use 'styles/theme-colors' as custom-theme;
 
 html {
-  color-scheme: light dark;
+  color-scheme: dark;
+
   @include mat.theme(
     (
-      color: mat.$violet-palette,
+      color: (
+        theme-type: dark,
+        primary: custom-theme.$primary-palette,
+        tertiary: custom-theme.$tertiary-palette
+      ),
       typography: Roboto,
       density: 0
     )
   );
-  // @include mat.theme(
-  //   (
-  //     color: (
-  //       theme-type: light,
-  //       primary: mat.$azure-palette,
-  //       tertiary: mat.$blue-palette
-  //     ),
-  //     typography: Roboto,
-  //     density: 0
-  //   )
-  // );
-} /* You can add global styles to this file, and also import other style files */
+}
 
 html,
 body {

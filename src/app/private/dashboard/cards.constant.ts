@@ -3,10 +3,14 @@ import { CardLink } from './card-link.interface';
 
 const allCards: Record<Roles.cosplay | Roles.kpop, CardLink[]> = {
   cosplay: [
-    { type: VoteTypes.cosplay, title: 'Cosplay', icon: 'person' },
-    { type: VoteTypes.cosplayTeam, title: 'Cosplay Team', icon: 'group' }
+    { type: VoteTypes.cosplay, title: 'Cosplay', icon: 'solo-cosplay.svg' },
+    {
+      type: VoteTypes.cosplayTeam,
+      title: 'Cosplay Team',
+      icon: 'team-cosplay.svg'
+    }
   ],
-  kpop: [{ type: VoteTypes.kpop, title: 'Kpop', icon: 'person' }]
+  kpop: [{ type: VoteTypes.kpop, title: 'Kpop', icon: 'kpop.svg' }]
 };
 
 export const dashboardCards: Record<Roles, CardLink[]> = {

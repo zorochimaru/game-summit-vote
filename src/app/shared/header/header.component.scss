@@ -1,5 +1,11 @@
 :host {
   height: var(--header-height);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.logo {
+  margin-left: auto;
+  display: flex;
 }
 
 .right-panel {

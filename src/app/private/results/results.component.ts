@@ -14,7 +14,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { forkJoin, map } from 'rxjs';
 
-import { FirestoreService, VoteTypes } from '../../core';
+import { AuthService, FirestoreService, Roles, VoteTypes } from '../../core';
 import { CommonResultFirestore } from '../core';
 import { PrivateService } from '../private.service';
 import { ImageDialogComponent } from '../shared';
@@ -36,12 +36,18 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   readonly #fireStoreService = inject(FirestoreService);
   readonly #privateService = inject(PrivateService);
   readonly #dialog = inject(Dialog);
+  readonly #authService = inject(AuthService);
 
   protected sort = viewChild<MatSort>(MatSort);
 
   protected readonly tabs = computed(() => {
     return Array.from(this.#allTabsData().entries())
-      .filter(([_, personScores]) => personScores.length > 0)
+      .filter(
+        ([type, personScores]) =>
+          (this.#authService.authUser()!.role === Roles.administrator ||
+            this.#authService.authUser()!.votedTypes.includes(type)) &&
+          personScores.length > 0
+      )
       .map(([voteType, _]) => voteType);
   });
 
@@ -153,6 +159,9 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   }
 
   protected openDetails(row: any): void {
+    if (!row.personImg) {
+      return;
+    }
     this.#dialog.open(ImageDialogComponent, {
       data: row.personImg,
       autoFocus: '__non_existing_element__'
