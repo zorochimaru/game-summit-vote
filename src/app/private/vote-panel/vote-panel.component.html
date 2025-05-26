@@ -55,6 +55,9 @@
                 (click)="zoomImage(person.image || '')"
                 [src]="person.image || 'assets/images/small-logo.svg'"
                 alt="" />
+              @if (!person.image) {
+                <span class="no-image-label">{{ person.name }}</span>
+              }
             </div>
           </swiper-slide>
         }
