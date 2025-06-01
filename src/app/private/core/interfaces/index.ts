@@ -1,3 +1,4 @@
+export * from './card-link.interface';
 export * from './common-result-firestore.interface';
 export * from './common-result.interface';
 export * from './common-vote-item.interface';

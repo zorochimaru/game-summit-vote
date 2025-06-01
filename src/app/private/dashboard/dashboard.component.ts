@@ -9,8 +9,8 @@ import { MatRippleModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
-import { AuthService, RouterLinks } from '../../core';
-import { dashboardCards } from './cards.constant';
+import { AuthService, Roles, RouterLinks } from '../../core';
+import { dashboardCards } from '../core/constants';
 
 @Component({
   selector: 'app-dashboard',
@@ -42,6 +42,12 @@ export class DashboardComponent {
     );
   });
 
+  protected readonly votePanelRouterLink = computed(() => {
+    const authUser = this.#authService.authUser();
+    return authUser?.role === Roles.user
+      ? RouterLinks.starsVotePanel
+      : RouterLinks.votePanel;
+  });
+
   protected resultsRouterLink = RouterLinks.results;
-  protected votePanelRouterLink = RouterLinks.votePanel;
 }

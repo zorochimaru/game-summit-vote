@@ -15,7 +15,7 @@
       appearance="outlined"
       class="card-link"
       matRipple
-      [routerLink]="['/', votePanelRouterLink]"
+      [routerLink]="['/', votePanelRouterLink()]"
       [queryParams]="{ voteType: item.type }">
       <img [src]="'assets/images/' + item.icon" alt="" />
       <span>{{ item.title }}</span>

@@ -196,6 +196,7 @@ export class AdminPanelComponent {
         this.displayedColumns.set([...columns, 'image']);
         const orderedRows = rows.map((x, i) => ({
           ...x,
+          stars: 0,
           order: i + 1
         }));
         this.rows.set(orderedRows);
@@ -291,7 +292,7 @@ export class AdminPanelComponent {
             collectionName: this.#privateService.mapTypeToCollection(
               this.typeControl.getRawValue()
             ),
-            data: { ...item, image: imageRes[i].url }
+            data: { ...item, stars: 0, image: imageRes[i].url }
           }));
           const batchReqs = this.#firestoreService.batchSave(items);
           return batchReqs;

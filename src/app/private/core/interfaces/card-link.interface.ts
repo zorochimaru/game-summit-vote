@@ -1,4 +1,4 @@
-import { VoteTypes } from '../../core';
+import { VoteTypes } from '../../../core';
 
 export interface CardLink {
   type: VoteTypes;

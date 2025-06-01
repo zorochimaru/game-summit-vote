@@ -1,5 +1,5 @@
-import { Roles, VoteTypes } from '../../core';
-import { CardLink } from './card-link.interface';
+import { Roles, VoteTypes } from '../../../core';
+import { CardLink } from '../interfaces';
 
 const allCards: Record<Roles.cosplay | Roles.kpop, CardLink[]> = {
   cosplay: [
@@ -16,5 +16,6 @@ const allCards: Record<Roles.cosplay | Roles.kpop, CardLink[]> = {
 export const dashboardCards: Record<Roles, CardLink[]> = {
   [Roles.administrator]: [...allCards.cosplay, ...allCards.kpop],
   [Roles.cosplay]: allCards.cosplay,
-  [Roles.kpop]: allCards.kpop
+  [Roles.kpop]: allCards.kpop,
+  [Roles.user]: [...allCards.cosplay, ...allCards.kpop]
 };

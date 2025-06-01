@@ -6,4 +6,9 @@ export interface AuthUser extends CommonFirestore {
   email: string;
   role: Roles;
   votedTypes: VoteTypes[];
+  stars?: {
+    [VoteTypes.cosplay]: number;
+    [VoteTypes.kpop]: number;
+    [VoteTypes.cosplayTeam]: number;
+  };
 }

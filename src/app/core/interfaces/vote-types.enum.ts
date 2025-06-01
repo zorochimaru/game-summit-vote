@@ -1,5 +1,5 @@
 export enum VoteTypes {
   cosplay = 'cosplay',
-  cosplayTeam = 'cosplay-team',
+  cosplayTeam = 'cosplayTeam',
   kpop = 'kpop'
 }

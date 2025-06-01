@@ -6,16 +6,15 @@ import {
   UrlSegment,
   UrlTree
 } from '@angular/router';
-import { map, Observable } from 'rxjs';
 
 import { queryParamKeys } from '../constants';
-import { RouterLinks } from '../interfaces';
+import { Roles, RouterLinks } from '../interfaces';
 import { AuthService } from '../services';
 
-export const authGuard: CanMatchFn = (
+export const juryOnlyGuard: CanMatchFn = (
   _route: Route,
   segments: UrlSegment[]
-): Observable<boolean | UrlTree> => {
+): boolean | UrlTree => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -23,14 +22,11 @@ export const authGuard: CanMatchFn = (
   const queryParams = window.location.search ? window.location.search : '';
   const redirectLink = `${path}${queryParams}`;
 
-  return auth.isAuthenticated$.pipe(
-    map(isAuthenticated => {
-      if (isAuthenticated) {
-        return true;
-      }
-      return router.createUrlTree([`/${RouterLinks.googleLogin}`], {
-        queryParams: { [queryParamKeys.redirectLink]: redirectLink }
-      });
-    })
-  );
+  if (auth.authUser()?.role !== Roles.user) {
+    return true;
+  }
+
+  return router.createUrlTree([`/${RouterLinks.googleLogin}`], {
+    queryParams: { [queryParamKeys.redirectLink]: redirectLink }
+  });
 };

@@ -1,9 +1,10 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { UserCredential } from '@angular/fire/auth';
+import { GoogleAuthProvider, UserCredential } from '@angular/fire/auth';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
+import firebase from 'firebase/compat/app';
 import { catchError, from, map, Observable, of } from 'rxjs';
 
-import { AuthUser } from '../interfaces';
+import { AuthUser, VoteTypes } from '../interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,13 +12,28 @@ export class AuthService {
   public authUser = signal<AuthUser | null>(null);
   public currentUser$ = this.#afAuth.authState;
   public isAuthenticated$ = this.currentUser$.pipe(map(Boolean));
-
   public signUp(email: string, password: string) {
     return from(this.#afAuth.createUserWithEmailAndPassword(email, password));
   }
 
   public setCurrentUser(user: AuthUser): void {
     this.authUser.set(user);
+  }
+
+  public decrementUserStarsLocally(type: VoteTypes): void {
+    const user = this.authUser();
+    if (user) {
+      this.authUser.update(user => {
+        if (!user) return user;
+        return {
+          ...user,
+          stars: {
+            ...user.stars!,
+            [type]: (user.stars![type] ?? 0) - 1
+          }
+        };
+      });
+    }
   }
 
   public signIn(email: string, password: string): Observable<UserCredential> {
@@ -33,6 +49,10 @@ export class AuthService {
         return of(error);
       })
     );
+  }
+
+  public signInWithGoogle(): Observable<firebase.auth.UserCredential> {
+    return from(this.#afAuth.signInWithPopup(new GoogleAuthProvider()));
   }
 
   public signOut(): Observable<void> {

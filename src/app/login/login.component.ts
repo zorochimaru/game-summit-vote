@@ -3,7 +3,6 @@ import {
   Component,
   DestroyRef,
   inject,
-  OnInit,
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -17,9 +16,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { filter, forkJoin, of, switchMap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {

@@ -1,6 +1,6 @@
 import { CommonFirestore } from '../../../core';
-import { ExcelFileFields } from './excel-file-fields.interface';
+import { CommonVoteItem } from './common-vote-item.interface';
 
 export interface CommonVoteItemFirestore
-  extends ExcelFileFields,
+  extends CommonVoteItem,
     CommonFirestore {}

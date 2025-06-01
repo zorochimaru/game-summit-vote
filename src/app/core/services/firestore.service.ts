@@ -16,6 +16,7 @@ import {
   getCountFromServer,
   getDoc,
   getDocs,
+  increment,
   limit,
   onSnapshot,
   orderBy,
@@ -26,6 +27,7 @@ import {
   setDoc,
   startAfter,
   Timestamp,
+  updateDoc,
   where,
   WhereFilterOp,
   writeBatch
@@ -360,6 +362,36 @@ export class FirestoreService {
         });
 
         return from(batch.commit());
+      })
+    );
+  }
+
+  public incrementField<T extends FirestoreRecord>(
+    collectionName: FirestoreCollections,
+    docId: string,
+    field: keyof T
+  ): Observable<void> {
+    return this.#signedUser$.pipe(
+      filter(Boolean),
+      take(1),
+      switchMap(() => {
+        const docRef = doc(this.#getCollectionRef<T>(collectionName), docId);
+        return from(updateDoc(docRef, { [field]: increment(1) }));
+      })
+    );
+  }
+
+  public decrementField<T extends FirestoreRecord>(
+    collectionName: FirestoreCollections,
+    docId: string,
+    field: string
+  ): Observable<void> {
+    return this.#signedUser$.pipe(
+      filter(Boolean),
+      take(1),
+      switchMap(() => {
+        const docRef = doc(this.#getCollectionRef<T>(collectionName), docId);
+        return from(updateDoc(docRef, { [field]: increment(-1) }));
       })
     );
   }
