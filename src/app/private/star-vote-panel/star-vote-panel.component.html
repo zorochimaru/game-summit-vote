@@ -11,11 +11,18 @@
       <div class="vote-item-header">
         {{ person.name }}
       </div>
-      <img [src]="person.image" [alt]="person.name" />
-      <div class="vote-item-stars">
-        <span>{{ person.stars || 0 }}</span>
-        <mat-icon>star</mat-icon>
-      </div>
+      @if (person.image) {
+        <img [src]="person.image" [alt]="person.name" />
+        <div class="vote-item-stars">
+          <span>{{ person.stars || 0 }}</span>
+          <mat-icon>star</mat-icon>
+        </div>
+      } @else {
+        <div class="vote-item-stars no-image">
+          <span>{{ person.stars || 0 }}</span>
+          <mat-icon>star</mat-icon>
+        </div>
+      }
     </mat-card>
   }
 </div>
