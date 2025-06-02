@@ -1,4 +1,5 @@
 import { Dialog } from '@angular/cdk/dialog';
+import { IMAGE_CONFIG, NgOptimizedImage } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -13,7 +14,7 @@ import { MatCard } from '@angular/material/card';
 import { MatRipple } from '@angular/material/core';
 import { MatIcon } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter, map, Observable, switchMap } from 'rxjs';
+import { filter, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import {
   AuthService,
@@ -25,11 +26,19 @@ import {
 } from '../../core';
 import { CommonVoteItemFirestore } from '../core/interfaces/common-vote-item-firestore.interface';
 import { PrivateService } from '../private.service';
-import { ConfirmDialogComponent } from '../shared';
+import { ConfirmDialogComponent, MessageDialogComponent } from '../shared';
 
 @Component({
   selector: 'app-star-vote-panel',
-  imports: [MatCard, MatRipple, MatIcon],
+  imports: [MatCard, MatRipple, MatIcon, NgOptimizedImage],
+  providers: [
+    {
+      provide: IMAGE_CONFIG,
+      useValue: {
+        placeholderResolution: 40
+      }
+    }
+  ],
   templateUrl: './star-vote-panel.component.html',
   styleUrl: './star-vote-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -90,22 +99,35 @@ export class StarVotePanelComponent implements OnInit {
             'stars.' + this.type()!
           )
         ),
+        tap(() => {
+          // update on client side to avoid flickering (and big bill :D)
+          this.personsList.update(persons => {
+            const personIndex = persons.findIndex(p => p.id === id);
+            if (personIndex !== -1) {
+              persons[personIndex].stars =
+                (persons[personIndex].stars || 0) + 1;
+            }
+            return persons;
+          });
+          this.#authService.decrementUserStarsLocally(this.type()!);
+        }),
+        switchMap(() => {
+          if (!this.#authService.authUser()?.stars?.[this.type()!]) {
+            return this.#dialog
+              .open(MessageDialogComponent, {
+                data: { message: `Thanks for voting in ${this.type()}.` }
+              })
+              .closed.pipe(
+                tap(() => {
+                  this.#router.navigate(['/']);
+                })
+              );
+          }
+          return of(void 0);
+        }),
         takeUntilDestroyed(this.#dr)
       )
-      .subscribe(() => {
-        // update on client side to avoid flickering (and big bill :D)
-        this.personsList.update(persons => {
-          const personIndex = persons.findIndex(p => p.id === id);
-          if (personIndex !== -1) {
-            persons[personIndex].stars = (persons[personIndex].stars || 0) + 1;
-          }
-          return persons;
-        });
-        this.#authService.decrementUserStarsLocally(this.type()!);
-        if (!this.#authService.authUser()?.stars?.[this.type()!]) {
-          this.#router.navigate(['/']);
-        }
-      });
+      .subscribe();
   }
 
   #fetchPersons(): void {

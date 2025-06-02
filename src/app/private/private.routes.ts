@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { adminGuard, AuthService, juryOnlyGuard, RouterLinks } from '../core';
+import { adminGuard, juryOnlyGuard, RouterLinks } from '../core';
 import { PrivateService } from './private.service';
 
 export const privateRoutes: Routes = [
@@ -19,7 +19,6 @@ export const privateRoutes: Routes = [
       },
       {
         path: RouterLinks.votePanel,
-        providers: [AuthService],
         canMatch: [juryOnlyGuard],
         loadComponent: () =>
           import('./vote-panel/vote-panel.component').then(
@@ -35,8 +34,7 @@ export const privateRoutes: Routes = [
       },
       {
         path: RouterLinks.adminPanel,
-        providers: [AuthService],
-        canMatch: [juryOnlyGuard, adminGuard],
+        canMatch: [adminGuard],
         loadComponent: () =>
           import('./admin-panel/admin-panel.component').then(
             c => c.AdminPanelComponent
@@ -44,7 +42,6 @@ export const privateRoutes: Routes = [
       },
       {
         path: RouterLinks.results,
-        providers: [AuthService],
         canMatch: [juryOnlyGuard],
         loadComponent: () =>
           import('./results/results.component').then(c => c.ResultsComponent)
