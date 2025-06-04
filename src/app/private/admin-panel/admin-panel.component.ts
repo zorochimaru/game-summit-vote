@@ -341,23 +341,9 @@ export class AdminPanelComponent {
   #mapTypeToTableHeaders(type: VoteTypes): string[] {
     switch (type) {
       case VoteTypes.cosplay:
-        return [
-          'name',
-          'fandom',
-          'registrationType',
-          'fandomType',
-          'costumeType',
-          'image'
-        ];
+        return ['name', 'fandom', 'characterName', 'image'];
       case VoteTypes.cosplayTeam:
-        return [
-          'name',
-          'count',
-          'fandom',
-          'fandomType',
-          'costumeType',
-          'image'
-        ];
+        return ['name', 'count', 'fandom', 'image'];
       case VoteTypes.kpop:
         return ['name', 'count', 'image'];
     }
