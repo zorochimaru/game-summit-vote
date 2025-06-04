@@ -214,23 +214,42 @@ export class AdminPanelComponent {
     const element = event.currentTarget as HTMLInputElement;
     const fileList: FileList | null = element.files;
     this.images.set([]);
+
     if (fileList?.length) {
       const sortedByNameFiles = Array.from(fileList).sort((a, b) => {
-        const numA = parseInt(a.name.match(/^\d+/)![0], 10); // Extract and parse the number
+        const numA = parseInt(a.name.match(/^\d+/)![0], 10);
         const numB = parseInt(b.name.match(/^\d+/)![0], 10);
-        return numA - numB; // Sort numerically
+        return numA - numB;
       });
-      for (const file of sortedByNameFiles) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          this.images.update(prev => [
-            ...prev,
-            { preview: base64 || '', file }
-          ]);
-        };
-        reader.readAsDataURL(file);
-      }
+
+      // Create an array to hold all the file reading promises with their indices
+      const fileReadPromises = sortedByNameFiles.map((file, index) => {
+        return new Promise<{ index: number; preview: string; file: File }>(
+          resolve => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              resolve({
+                index,
+                preview: (reader.result as string) || '',
+                file
+              });
+            };
+            reader.readAsDataURL(file);
+          }
+        );
+      });
+
+      // When all files are read, update the images array
+      Promise.all(fileReadPromises).then(results => {
+        // Sort by the original index to ensure correct order
+        results.sort((a, b) => a.index - b.index);
+        // Map to the format expected by the images signal
+        const orderedImages = results.map(item => ({
+          preview: item.preview,
+          file: item.file
+        }));
+        this.images.set(orderedImages);
+      });
     }
   }
 
