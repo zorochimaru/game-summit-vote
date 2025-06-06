@@ -415,6 +415,26 @@ export class AdminPanelComponent {
       this.#privateService.mapTypeToResultsCollection(type)
     );
 
+    const personsCollections = Object.values(VoteTypes).map(type =>
+      this.#privateService.mapTypeToCollection(type)
+    );
+
+    const personsUpdateRequests = personsCollections.map(collection => {
+      return this.#firestoreService.getList(collection).pipe(
+        switchMap(list => {
+          const items: FirestoreBatchWriteItem<
+            Partial<KpopFirestore | CosplayFirestore>
+          >[] = list.map(item => ({
+            docId: item.id!,
+            collectionName: collection,
+            operation: Operations.update,
+            data: { ...item, stars: 0 }
+          }));
+          return this.#firestoreService.batchSave(items);
+        })
+      );
+    });
+
     const requests = collections.map(collection =>
       this.#firestoreService.getList(collection).pipe(
         switchMap(list => {
@@ -444,7 +464,7 @@ export class AdminPanelComponent {
         })
       );
 
-    forkJoin([...requests, clearAuthFlagsRequest])
+    forkJoin([...requests, ...personsUpdateRequests, clearAuthFlagsRequest])
       .pipe(
         switchMap(() =>
           this.#firestoreService.get<AuthUser>(
