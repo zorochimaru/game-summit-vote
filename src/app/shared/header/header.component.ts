@@ -46,6 +46,6 @@ export class HeaderComponent {
   protected logOut(): void {
     this.#authService
       .signOut()
-      .subscribe(() => this.#router.navigate([RouterLinks.googleLogin]));
+      .subscribe(() => this.#router.navigate([RouterLinks.login]));
   }
 }

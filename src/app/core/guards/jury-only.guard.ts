@@ -26,7 +26,7 @@ export const juryOnlyGuard: CanMatchFn = (
     return true;
   }
 
-  return router.createUrlTree([`/${RouterLinks.googleLogin}`], {
+  return router.createUrlTree([`/${RouterLinks.login}`], {
     queryParams: { [queryParamKeys.redirectLink]: redirectLink }
   });
 };

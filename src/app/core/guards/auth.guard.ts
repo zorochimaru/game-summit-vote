@@ -28,7 +28,7 @@ export const authGuard: CanMatchFn = (
       if (isAuthenticated) {
         return true;
       }
-      return router.createUrlTree([`/${RouterLinks.googleLogin}`], {
+      return router.createUrlTree([`/${RouterLinks.login}`], {
         queryParams: { [queryParamKeys.redirectLink]: redirectLink }
       });
     })
