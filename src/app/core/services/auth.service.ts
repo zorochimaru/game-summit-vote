@@ -1,19 +1,35 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { GoogleAuthProvider, UserCredential } from '@angular/fire/auth';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import firebase from 'firebase/compat/app';
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  User,
+  UserCredential
+} from '@firebase/auth';
 import { catchError, from, map, Observable, of } from 'rxjs';
 
+import { FirebaseProvider } from '../firebase-provider';
 import { AuthUser, VoteTypes } from '../interfaces';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  readonly #afAuth = inject(AngularFireAuth);
+  readonly #afAuth = inject(FirebaseProvider).auth;
   public authUser = signal<AuthUser | null>(null);
-  public currentUser$ = this.#afAuth.authState;
+
+  public currentUser$ = new Observable<User | null>(subscriber =>
+    onAuthStateChanged(
+      this.#afAuth,
+      subscriber.next.bind(subscriber),
+      subscriber.error.bind(subscriber)
+    )
+  );
+
   public isAuthenticated$ = this.currentUser$.pipe(map(Boolean));
-  public signUp(email: string, password: string) {
-    return from(this.#afAuth.createUserWithEmailAndPassword(email, password));
+
+  public signUp(email: string, password: string): Observable<UserCredential> {
+    return from(createUserWithEmailAndPassword(this.#afAuth, email, password));
   }
 
   public setCurrentUser(user: AuthUser): void {
@@ -37,7 +53,7 @@ export class AuthService {
   }
 
   public signIn(email: string, password: string): Observable<UserCredential> {
-    return from(this.#afAuth.signInWithEmailAndPassword(email, password)).pipe(
+    return from(signInWithEmailAndPassword(this.#afAuth, email, password)).pipe(
       catchError(error => {
         var errorCode = error.code;
         var errorMessage = error.message;
@@ -51,8 +67,8 @@ export class AuthService {
     );
   }
 
-  public signInWithGoogle(): Observable<firebase.auth.UserCredential> {
-    return from(this.#afAuth.signInWithPopup(new GoogleAuthProvider()));
+  public signInWithGoogle(): Observable<UserCredential> {
+    return from(signInWithPopup(this.#afAuth, new GoogleAuthProvider()));
   }
 
   public signOut(): Observable<void> {

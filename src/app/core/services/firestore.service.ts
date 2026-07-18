@@ -3,16 +3,15 @@ import {
   addDoc,
   collection,
   collectionGroup,
-  CollectionReference,
+  type CollectionReference,
   deleteDoc,
   doc,
-  DocumentChange,
-  DocumentChangeType,
+  type DocumentChange,
+  type DocumentChangeType,
   documentId,
-  DocumentReference,
-  DocumentSnapshot,
-  FieldPath,
-  Firestore,
+  type DocumentReference,
+  type DocumentSnapshot,
+  type FieldPath,
   getCountFromServer,
   getDoc,
   getDocs,
@@ -20,18 +19,18 @@ import {
   limit,
   onSnapshot,
   orderBy,
-  OrderByDirection,
+  type OrderByDirection,
   query,
-  QueryConstraint,
+  type QueryConstraint,
   serverTimestamp,
   setDoc,
   startAfter,
   Timestamp,
   updateDoc,
   where,
-  WhereFilterOp,
+  type WhereFilterOp,
   writeBatch
-} from '@angular/fire/firestore';
+} from 'firebase/firestore';
 import chunk from 'lodash-es/chunk';
 import {
   filter,
@@ -46,6 +45,7 @@ import {
 } from 'rxjs';
 
 import { exhaustiveCheck, filterPredicate } from '../../utils';
+import { FirebaseProvider } from '../firebase-provider';
 import {
   CommonFirestore,
   FirestoreBatchDeleteItem,
@@ -85,7 +85,7 @@ export const MAX_IN_QUERY_SIZE = 30;
 export class FirestoreService {
   // Need to auth to update/create/delete
   readonly #authService = inject(AuthService);
-  readonly #fbFirestore = inject(Firestore);
+  readonly #fbFirestore = inject(FirebaseProvider).firestore;
 
   readonly #signedUser$ = this.#authService.currentUser$;
 

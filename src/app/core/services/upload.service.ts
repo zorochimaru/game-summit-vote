@@ -1,13 +1,12 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { FirebaseProvider, StorageFolders } from '@core';
 import {
   deleteObject,
   getDownloadURL,
-  getStorage,
   ref,
-  uploadBytesResumable
-} from '@angular/fire/storage';
-import { StorageFolders } from '@core';
-import { UploadMetadata } from '@firebase/storage';
+  uploadBytesResumable,
+  UploadMetadata
+} from '@firebase/storage';
 import { randomUUID } from '@utils';
 import { from, Observable } from 'rxjs';
 
@@ -17,7 +16,7 @@ export type UploadResult = { progress: number; url: string };
   providedIn: 'root'
 })
 export class UploadService {
-  private readonly storage = getStorage();
+  private readonly storage = inject(FirebaseProvider).storage;
 
   /**
    * Uploads a file to the storage

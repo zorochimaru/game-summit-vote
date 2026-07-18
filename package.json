@@ -1,6 +1,6 @@
 {
   "name": "game-summit-vote",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "scripts": {
     "start": "npm run make-sprite && ng serve -o",
     "build": "ng build",
@@ -19,7 +19,6 @@
     "@angular/common": "^19.0.0",
     "@angular/compiler": "^19.0.0",
     "@angular/core": "^19.0.0",
-    "@angular/fire": "^19.0.0-rc.0",
     "@angular/forms": "^19.0.0",
     "@angular/material": "^19.0.1",
     "@angular/platform-browser": "^19.0.0",
@@ -51,6 +50,7 @@
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "firebase": "^12.16.0",
     "firebase-tools": "^13.27.0",
     "husky": "^9.1.7",
     "jasmine-core": "~5.4.0",

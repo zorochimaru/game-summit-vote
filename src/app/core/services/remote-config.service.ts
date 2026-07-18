@@ -1,10 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import {
-  fetchAndActivate,
-  getAllChanges,
-  RemoteConfig,
-  Value
-} from '@angular/fire/remote-config';
+import { fetchAndActivate, getAll, Value } from 'firebase/remote-config';
 import {
   from,
   map,
@@ -16,13 +11,14 @@ import {
   tap
 } from 'rxjs';
 
+import { FirebaseProvider } from '../firebase-provider';
 import { RemoteConfigParams } from '../interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RemoteConfigService {
-  readonly #ffService = inject(RemoteConfig);
+  readonly #ffService = inject(FirebaseProvider).remoteConfig;
   readonly #configReady$: Observable<boolean>;
   constructor() {
     this.#configReady$ = from(fetchAndActivate(this.#ffService)).pipe(
@@ -124,12 +120,7 @@ export class RemoteConfigService {
 
   #getConfig(): Observable<Record<RemoteConfigParams, Value>> {
     return this.#configReady$.pipe(
-      switchMap(
-        () =>
-          getAllChanges(this.#ffService) as Observable<
-            Record<RemoteConfigParams, Value>
-          >
-      ),
+      map(() => getAll(this.#ffService) as Record<RemoteConfigParams, Value>),
       take(1)
     );
   }
