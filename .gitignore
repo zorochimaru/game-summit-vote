@@ -48,3 +48,6 @@ Thumbs.db
 
 # Env files
 /src/environments/**
+
+# Claude plans
+/.claude/plans/

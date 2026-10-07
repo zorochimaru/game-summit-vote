@@ -1,0 +1,38 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=$(jq -r '.cwd // empty'); root=\"${d:-$CLAUDE_PROJECT_DIR}\"; root=\"${root%/}\"; find \"$root\" -type d -name .cc-writes -prune 2>/dev/null | while IFS= read -r w; do p=$(dirname \"$w\"); if [ \"$(basename \"$p\")\" = \".claude\" ] && [ \"$p\" != \"$root/.claude\" ]; then rm -rf \"$p\"; else rm -rf \"$w\"; fi; done; true",
+            "statusMessage": "Cleaning .cc-writes..."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/caveman-session-start.js\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-hook.sh\"",
+            "timeout": 30,
+            "statusMessage": "Formatting with Prettier..."
+          }
+        ]
+      }
+    ]
+  }
+}
