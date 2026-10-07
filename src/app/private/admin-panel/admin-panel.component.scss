@@ -39,6 +39,11 @@
   margin-bottom: 24px;
 }
 
+.scene-description-cell {
+  min-width: 300px;
+  white-space: pre-line;
+}
+
 .img-cell-container img {
   object-fit: cover;
 }

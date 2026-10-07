@@ -4,5 +4,5 @@ export interface Cosplay extends CommonVoteItem {
   fandom: string;
   fandomType: string;
   costumeType: string;
-  characterDescription: string;
+  sceneDescription: string;
 }

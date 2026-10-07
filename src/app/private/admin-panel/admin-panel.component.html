@@ -34,7 +34,7 @@
       type="file"
       #photosInput
       onclick="this.value=null"
-      accept="image/webp"
+      accept="image/*"
       (change)="setImages($event)" />
     <button
       type="button"
@@ -139,7 +139,7 @@
                     hidden
                     #single_image_input
                     onclick="this.value=null"
-                    accept="image/webp"
+                    accept="image/*"
                     (change)="updateImage($event, element.order - 1)" />
                   @if (images()[element.order - 1]; as image) {
                     <img
@@ -158,6 +158,8 @@
                     </button>
                   }
                 </div>
+              } @else if (column === "sceneDescription") {
+                <p class="scene-description-cell">{{ element[column] }}</p>
               } @else {
                 {{ element[column] }}
               }

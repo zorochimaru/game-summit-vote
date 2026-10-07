@@ -73,6 +73,12 @@
           </li>
         }
       </ul>
+      @if (activePerson()?.["sceneDescription"]; as sceneDescription) {
+        <div class="scene-description-container">
+          <h3>Scene description</h3>
+          <p class="scene-description">{{ sceneDescription }}</p>
+        </div>
+      }
     </div>
   </div>
 </div>

@@ -114,6 +114,26 @@
       text-align: right;
     }
   }
+
+  .scene-description-container {
+    padding: 12px 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+
+    h3 {
+      margin-top: 0;
+    }
+  }
+
+  .scene-description {
+    --scene-description-line-height: 1.5;
+
+    margin: 0;
+    white-space: pre-line;
+    line-height: var(--scene-description-line-height);
+    max-height: calc(var(--scene-description-line-height) * 10em);
+    overflow-y: auto;
+  }
 }
 
 .vote-items-container {

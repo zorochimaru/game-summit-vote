@@ -276,7 +276,9 @@ export class VotePanelComponent implements OnInit {
           item.label !== 'createdBy' &&
           item.label !== 'updatedBy' &&
           item.label !== 'order' &&
-          item.label !== 'image'
+          item.label !== 'image' &&
+          item.label !== 'count' &&
+          item.label !== 'sceneDescription'
       )
       .sort((a, b) => a.label.localeCompare(b.label));
   }
