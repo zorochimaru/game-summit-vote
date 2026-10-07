@@ -7,8 +7,7 @@ import {
 } from '@angular/platform-browser';
 
 @Pipe({
-  name: 'sanitize',
-  standalone: true
+  name: 'sanitize'
 })
 export class SanitizePipe implements PipeTransform {
   readonly #sanitizer = inject(DomSanitizer);

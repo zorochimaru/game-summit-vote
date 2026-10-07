@@ -17,7 +17,6 @@ import {
 
 @Component({
   selector: 'app-header',
-  standalone: true,
   imports: [MatToolbarModule, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'

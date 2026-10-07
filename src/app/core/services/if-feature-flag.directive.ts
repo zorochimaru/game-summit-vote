@@ -13,8 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FeatureFlags, FeatureFlagService } from './feature-flag.service';
 
 @Directive({
-  selector: '[appIfFeatureFlag]',
-  standalone: true
+  selector: '[appIfFeatureFlag]'
 })
 export class IfFeatureFlagDirective {
   readonly #cdr = inject(ChangeDetectorRef);
