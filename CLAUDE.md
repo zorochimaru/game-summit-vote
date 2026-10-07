@@ -11,7 +11,7 @@ Angular 19 SPA for jury voting at Game Summit (cosplay solo, cosplay team, and K
 - `npm start` — builds the SVG icon sprite (`make-sprite`) and then runs `ng serve -o` (http://localhost:4200)
 - `npm run build` — production build to `dist/`
 - `npm run make-sprite` — regenerate the SVG sprite from `src/assets/icons/svg/**/*.svg` (config in `svg-sprite.json`). Run it after adding or changing icons; CI runs it before deploy.
-- `npm run lint` / `npm run lint-fix` — ESLint via `ng lint`. **Currently broken:** `angular.json` has no `lint` target. Until it's added (step 1 of `.claude/plans/angular-22-upgrade.md`), run `npx eslint src/app` (or `npx eslint --fix <file>`)
+- `npm run lint` / `npm run lint-fix` — ESLint via `ng lint`
 - `npm run stylelint` / `npm run stylelint:fix` — SCSS linting
 - `npm run format` — Prettier
 
