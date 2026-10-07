@@ -58,7 +58,11 @@ type TResultsArray = FormArray<TypedForm<Score>>;
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './vote-panel.component.html',
-  styleUrl: './vote-panel.component.scss'
+  styleUrl: './vote-panel.component.scss',
+  host: {
+    '(document:keydown.arrowleft)': 'onArrowKey($event, -1)',
+    '(document:keydown.arrowright)': 'onArrowKey($event, 1)'
+  }
 })
 export class VotePanelComponent implements OnInit {
   readonly #route = inject(ActivatedRoute);
@@ -163,6 +167,26 @@ export class VotePanelComponent implements OnInit {
   protected selectActivePerson(index: number): void {
     this.imageSwiper()?.nativeElement?.swiper?.slideTo(index);
     this.onScoreChange();
+  }
+
+  protected onArrowKey(event: Event, step: number): void {
+    const target = event.target as HTMLElement | null;
+    // Arrow keys on a focused slider or input change its value, and dialogs
+    // own the keyboard while open
+    if (
+      this.#dialog.openDialogs.length ||
+      target?.closest('input, textarea, select, mat-slider')
+    ) {
+      return;
+    }
+
+    const index = this.activePersonIndex() + step;
+    if (index < 0 || index >= this.personsList().length) {
+      return;
+    }
+
+    event.preventDefault();
+    this.selectActivePerson(index);
   }
 
   protected onScoreChange(): void {

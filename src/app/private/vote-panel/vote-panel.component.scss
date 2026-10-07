@@ -1,3 +1,9 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--header-height));
+}
+
 .score-container {
   margin-top: 30px;
   display: flex;
@@ -23,6 +29,7 @@
 
 .selected-item-image {
   flex-shrink: 0;
+  align-self: flex-start;
   width: 300px;
 
   $border: 5px;
@@ -139,6 +146,7 @@
 .vote-items-container {
   padding: 20px;
   height: 300px;
+  margin-top: auto;
 }
 
 .vote-item {
@@ -223,6 +231,7 @@ swiper-slide {
 
   .score-container {
     margin-top: 10px;
+    margin-bottom: 20px;
     gap: 10px;
   }
 
@@ -256,7 +265,6 @@ swiper-slide {
   .vote-items-container {
     padding: 10px;
     border-top: 1px solid var(--border-default);
-    margin-top: 20px;
     height: 200px;
   }
 
