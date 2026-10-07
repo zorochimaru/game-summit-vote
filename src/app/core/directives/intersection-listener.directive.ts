@@ -3,6 +3,7 @@ import {
   Directive,
   ElementRef,
   EventEmitter,
+  inject,
   OnInit,
   Output
 } from '@angular/core';
@@ -16,7 +17,7 @@ export class IntersectionListenerDirective implements OnInit, AfterViewInit {
 
   observer!: IntersectionObserver; //  It will be used to observe changes in the intersection of an element with its parent container.
 
-  constructor(private element: ElementRef) {}
+  private element = inject(ElementRef);
 
   ngOnInit(): void {
     this.intersectionObserver();
