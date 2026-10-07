@@ -6,9 +6,7 @@ description: Use when writing or editing Angular code (components, services, sig
 # Angular conventions
 
 Angular 22 with Angular Material — signals-first, standalone, **zoneless**
-(`provideZonelessChangeDetection`), OnPush by default. The upgrade from 19 is tracked in
-`.claude/plans/angular-22-upgrade.md`; until it's done, check `package.json` before using an API
-introduced after v19. Some older files predate these rules — follow them for new and edited code, but
+(`provideZonelessChangeDetection`), OnPush by default. Some older files predate these rules — follow them for new and edited code, but
 do not rewrite untouched code just to conform.
 
 ## General

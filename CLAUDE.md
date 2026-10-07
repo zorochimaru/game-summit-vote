@@ -4,18 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Angular 19 SPA for jury voting at Game Summit (cosplay solo, cosplay team, and K-pop contests). Backend is Firebase only (Auth, Firestore, Storage, Remote Config) — there is no custom server. Deployed to Firebase Hosting (project `gamesummit-jury`) by GitHub Actions on push to `master`.
+Angular 22 SPA for jury voting at Game Summit (cosplay solo, cosplay team, and K-pop contests). Backend is Firebase only (Auth, Firestore, Storage, Remote Config) — there is no custom server. Deployed to Firebase Hosting (project `gamesummit-jury`) by GitHub Actions on push to `master`.
 
 ## Commands
 
 - `npm start` — builds the SVG icon sprite (`make-sprite`) and then runs `ng serve -o` (http://localhost:4200)
-- `npm run build` — production build to `dist/`
+- `npm run build` — production build to `dist/` (`@angular/build` application builder)
 - `npm run make-sprite` — regenerate the SVG sprite from `src/assets/icons/svg/**/*.svg` (config in `svg-sprite.json`). Run it after adding or changing icons; CI runs it before deploy.
 - `npm run lint` / `npm run lint-fix` — ESLint via `ng lint`
 - `npm run stylelint` / `npm run stylelint:fix` — SCSS linting
 - `npm run format` — Prettier
+- CI (GitHub Actions) runs on Node 24.
 
-There are no unit tests: there are no `*.spec.ts` files and no `test` target in `angular.json`, even though Karma/Jasmine are installed.
+There are no unit tests: there are no `*.spec.ts` files and no `test` target in `angular.json`.
 
 ## Required local setup
 
@@ -27,7 +28,7 @@ There are no unit tests: there are no `*.spec.ts` files and no `test` target in 
 
 ## Architecture
 
-- **Standalone components, zoneless.** `app.config.ts` uses `provideExperimentalZonelessChangeDetection()`, so state that drives templates must be signals (or go through `async`/`toSignal`). Mutating plain fields will not re-render.
+- **Standalone components, zoneless.** `app.config.ts` uses `provideZonelessChangeDetection()`, so state that drives templates must be signals (or go through `async`/`toSignal`). Mutating plain fields will not re-render.
 - **Firebase access goes through `FirebaseProvider`** (`core/firebase-provider/firebase.provider.ts`). It is a root service that initializes the modular Firebase SDK (`firebase/*`, not AngularFire, which was removed) and exposes `auth`, `firestore` (persistent multi-tab cache), `storage` and `remoteConfig`. The InjectionTokens in `firebase-token.ts` are currently unused.
 - **`FirestoreService`** (`core/services/firestore.service.ts`) is the generic data layer: Observable-returning `get`, `getList`, `getListWithPagination`, `getListByIds`, `getLiveListChanges`, `create`, `update`, `delete`, `batchSave` (chunked `writeBatch`), and `incrementField`/`decrementField`. Collection names come from the `FirestoreCollections` enum. Use this service instead of calling the Firestore SDK from components.
 - **Vote types → collections.** `VoteTypes` (`cosplay`, `cosplayTeam`, `kpop`) map to a participants collection, a criteria collection, and a results collection through `PrivateService.mapTypeTo*Collection`. Star votes use separate `*StarResults` collections. Domain interfaces in `private/core/interfaces` come in pairs: `X` and `XFirestore` (the stored shape).
