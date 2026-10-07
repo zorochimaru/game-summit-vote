@@ -1,7 +1,6 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { IMAGE_CONFIG, NgOptimizedImage } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -40,8 +39,7 @@ import { ConfirmDialogComponent, MessageDialogComponent } from '../shared';
     }
   ],
   templateUrl: './star-vote-panel.component.html',
-  styleUrl: './star-vote-panel.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './star-vote-panel.component.scss'
 })
 export class StarVotePanelComponent implements OnInit {
   readonly #route = inject(ActivatedRoute);

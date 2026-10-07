@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject
-} from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatRippleModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,8 +11,7 @@ import { dashboardCards } from '../core/constants';
   selector: 'app-dashboard',
   imports: [MatCardModule, MatIconModule, RouterLink, MatRippleModule],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent {
   #authService = inject(AuthService);

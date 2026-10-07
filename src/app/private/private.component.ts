@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  inject,
-  OnInit
-} from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
 import { filter, switchMap } from 'rxjs';
@@ -21,8 +15,7 @@ import { HeaderComponent } from '../shared';
   selector: 'app-private',
   imports: [RouterOutlet, HeaderComponent],
   templateUrl: './private.component.html',
-  styleUrl: './private.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './private.component.scss'
 })
 export class PrivateComponent implements OnInit {
   #firestoreService = inject(FirestoreService);

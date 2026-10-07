@@ -1,13 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TitleCasePipe } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  inject,
-  signal
-} from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -66,8 +60,7 @@ type VoteItem = Kpop | Cosplay;
     MatTooltipModule
   ],
   templateUrl: './admin-panel.component.html',
-  styleUrl: './admin-panel.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './admin-panel.component.scss'
 })
 export class AdminPanelComponent {
   readonly #firestoreService = inject(FirestoreService);

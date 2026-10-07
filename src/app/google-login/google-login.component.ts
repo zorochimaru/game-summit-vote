@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  inject
-} from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
@@ -22,8 +17,7 @@ import {
   selector: 'app-google-login',
   imports: [MatButtonModule],
   templateUrl: './google-login.component.html',
-  styleUrl: './google-login.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './google-login.component.scss'
 })
 export class GoogleLoginComponent {
   readonly #firestoreService = inject(FirestoreService);

@@ -1,7 +1,6 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { TitleCasePipe } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -58,7 +57,6 @@ type TResultsArray = FormArray<TypedForm<Score>>;
     TitleCasePipe
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './vote-panel.component.html',
   styleUrl: './vote-panel.component.scss'
 })

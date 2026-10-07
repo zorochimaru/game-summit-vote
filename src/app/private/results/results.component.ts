@@ -1,7 +1,6 @@
 import { Dialog } from '@angular/cdk/dialog';
 import {
   AfterViewInit,
-  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -29,8 +28,7 @@ interface PersonScore {
   selector: 'app-results',
   imports: [MatTabsModule, MatTableModule, MatSortModule],
   templateUrl: './results.component.html',
-  styleUrl: './results.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrl: './results.component.scss'
 })
 export class ResultsComponent implements OnInit, AfterViewInit {
   readonly #fireStoreService = inject(FirestoreService);
