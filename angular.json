@@ -95,23 +95,6 @@
           },
           "defaultConfiguration": "development"
         },
-        "deploy": {
-          "builder": "@angular/fire:deploy",
-          "options": {
-            "version": 2
-          },
-          "configurations": {
-            "production": {
-              "buildTarget": "game-summit-vote:build:production",
-              "serveTarget": "game-summit-vote:serve:production"
-            },
-            "development": {
-              "buildTarget": "game-summit-vote:build:development",
-              "serveTarget": "game-summit-vote:serve:development"
-            }
-          },
-          "defaultConfiguration": "production"
-        },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
