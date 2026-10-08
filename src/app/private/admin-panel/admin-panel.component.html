@@ -2,6 +2,9 @@
   @if (processing()) {
     <div class="processing-overlay">
       <mat-progress-spinner mode="indeterminate" diameter="64" />
+      @if (progressLabel()) {
+        <p class="progress-label">{{ progressLabel() }}</p>
+      }
     </div>
   }
   <div class="actions">

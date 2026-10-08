@@ -7,10 +7,18 @@
   inset: 0;
   z-index: 1000;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 16px;
   background: rgb(0 0 0 / 50%);
   pointer-events: all;
+}
+
+.progress-label {
+  margin: 0;
+  color: var(--fg-light);
+  text-align: center;
 }
 
 .disabled {

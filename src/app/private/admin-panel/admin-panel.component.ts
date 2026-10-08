@@ -24,7 +24,8 @@ import {
   finalize,
   forkJoin,
   of,
-  switchMap
+  switchMap,
+  tap
 } from 'rxjs';
 import { read, utils } from 'xlsx';
 
@@ -82,6 +83,7 @@ export class AdminPanelComponent {
   readonly #dialog = inject(Dialog);
 
   protected processing = signal(false);
+  protected progressLabel = signal('');
   protected criterias = signal<Criteria[] | CriteriaFirestore[]>([]);
   protected rows = signal<VoteItem[]>([]);
   protected images = signal<{ preview: string; file?: File }[]>([]);
@@ -209,26 +211,37 @@ export class AdminPanelComponent {
     if (fileList?.length) {
       const file = fileList[0];
       const reader = new FileReader();
+      this.processing.set(true);
       reader.onload = (e: any) => {
-        const workbook = read(e.target.result, { type: 'binary' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const rows = utils.sheet_to_json<ExcelFileFields>(worksheet, {
-          raw: true
-        });
-        const columns = Object.keys(rows[0]);
-        this.displayedColumns.set([...columns, 'image']);
-        const orderedRows = rows.map((x, i) => ({
-          ...x,
-          stars: 0,
-          order: i + 1
-        }));
-        this.rows.set(orderedRows);
-        this.images.set(
-          orderedRows.map(item => ({
-            preview: item.image || ''
-          }))
-        );
+        try {
+          const workbook = read(e.target.result, { type: 'binary' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = utils.sheet_to_json<ExcelFileFields>(worksheet, {
+            raw: true
+          });
+          const columns = Object.keys(rows[0]);
+          this.displayedColumns.set([...columns, 'image']);
+          const orderedRows = rows.map((x, i) => ({
+            ...x,
+            stars: 0,
+            order: i + 1
+          }));
+          this.rows.set(orderedRows);
+          this.images.set(
+            orderedRows.map(item => ({
+              preview: item.image || ''
+            }))
+          );
+        } catch (err) {
+          this.#handleError(err);
+        } finally {
+          this.processing.set(false);
+        }
+      };
+      reader.onerror = () => {
+        this.processing.set(false);
+        this.#handleError(reader.error);
       };
       reader.readAsArrayBuffer(file);
     }
@@ -240,6 +253,7 @@ export class AdminPanelComponent {
     this.images.set([]);
 
     if (fileList?.length) {
+      this.processing.set(true);
       const sortedByNameFiles = Array.from(fileList).sort((a, b) => {
         const numA = parseInt(a.name.match(/^\d+/)![0], 10);
         const numB = parseInt(b.name.match(/^\d+/)![0], 10);
@@ -249,7 +263,7 @@ export class AdminPanelComponent {
       // Create an array to hold all the file reading promises with their indices
       const fileReadPromises = sortedByNameFiles.map((file, index) => {
         return new Promise<{ index: number; preview: string; file: File }>(
-          resolve => {
+          (resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
               resolve({
@@ -258,22 +272,26 @@ export class AdminPanelComponent {
                 file
               });
             };
+            reader.onerror = () => reject(reader.error);
             reader.readAsDataURL(file);
           }
         );
       });
 
       // When all files are read, update the images array
-      Promise.all(fileReadPromises).then(results => {
-        // Sort by the original index to ensure correct order
-        results.sort((a, b) => a.index - b.index);
-        // Map to the format expected by the images signal
-        const orderedImages = results.map(item => ({
-          preview: item.preview,
-          file: item.file
-        }));
-        this.images.set(orderedImages);
-      });
+      Promise.all(fileReadPromises)
+        .then(results => {
+          // Sort by the original index to ensure correct order
+          results.sort((a, b) => a.index - b.index);
+          // Map to the format expected by the images signal
+          const orderedImages = results.map(item => ({
+            preview: item.preview,
+            file: item.file
+          }));
+          this.images.set(orderedImages);
+        })
+        .catch(err => this.#handleError(err))
+        .finally(() => this.processing.set(false));
     }
   }
 
@@ -284,6 +302,7 @@ export class AdminPanelComponent {
     if (fileList?.length) {
       const file = fileList[0];
       const reader = new FileReader();
+      this.processing.set(true);
       reader.onload = () => {
         const base64 = reader.result as string;
         this.images.update(prev => {
@@ -291,6 +310,11 @@ export class AdminPanelComponent {
           newImages[index] = { preview: base64, file };
           return newImages;
         });
+        this.processing.set(false);
+      };
+      reader.onerror = () => {
+        this.processing.set(false);
+        this.#handleError(reader.error);
       };
       reader.readAsDataURL(file);
     }
@@ -313,14 +337,30 @@ export class AdminPanelComponent {
   }
 
   protected onSaveData(): void {
+    const total = this.images().filter(img => img.file).length;
+    let completed = 0;
     const imageRequests = this.images().map(img =>
       img.file
-        ? this.#upload.upload(
-            img.file,
-            this.#mapTypeToStorageFolder(this.typeControl.getRawValue())
-          )
+        ? this.#upload
+            .upload(
+              img.file,
+              this.#mapTypeToStorageFolder(this.typeControl.getRawValue())
+            )
+            .pipe(
+              tap(res => {
+                if (res.progress === 100) {
+                  completed++;
+                  this.progressLabel.set(
+                    `Uploading covers ${completed}/${total}`
+                  );
+                }
+              })
+            )
         : of({ progress: 100, url: img.preview })
     );
+
+    this.processing.set(true);
+    this.progressLabel.set(total ? `Uploading covers 0/${total}` : '');
 
     forkJoin([...imageRequests])
       .pipe(
@@ -339,6 +379,11 @@ export class AdminPanelComponent {
           }));
           const batchReqs = this.#firestoreService.batchSave(items);
           return batchReqs;
+        }),
+        catchError(err => this.#handleError(err)),
+        finalize(() => {
+          this.processing.set(false);
+          this.progressLabel.set('');
         }),
         takeUntilDestroyed(this.#dr)
       )
