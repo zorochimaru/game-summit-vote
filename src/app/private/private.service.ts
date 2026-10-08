@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { FirestoreCollections, VoteTypes } from '../core';
+import { FirestoreCollections, StorageFolders, VoteTypes } from '../core';
 
 @Injectable()
 export class PrivateService {
@@ -34,6 +34,17 @@ export class PrivateService {
         return FirestoreCollections.cosplayTeamCriteria;
       case VoteTypes.kpop:
         return FirestoreCollections.kPopCriteria;
+    }
+  }
+
+  public mapTypeToCraftStorageFolder(type: VoteTypes): StorageFolders | null {
+    switch (type) {
+      case VoteTypes.cosplay:
+        return StorageFolders.cosplayCraft;
+      case VoteTypes.cosplayTeam:
+        return StorageFolders.cosplayTeamCraft;
+      case VoteTypes.kpop:
+        return null;
     }
   }
 }
