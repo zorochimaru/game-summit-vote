@@ -24,7 +24,8 @@ export class UploadService {
   public upload(
     data: File | Blob,
     folder: StorageFolders,
-    filename?: string
+    filename?: string,
+    subPath?: string
   ): Observable<UploadResult> {
     return new Observable<UploadResult>(subscriber => {
       try {
@@ -32,7 +33,9 @@ export class UploadService {
           data,
           filename
         );
-        const path = `${folder}/${storageFilename}`;
+        const path = subPath
+          ? `${folder}/${subPath}/${storageFilename}`
+          : `${folder}/${storageFilename}`;
         const fileRef = ref(this.storage, path);
         const uploadTask = uploadBytesResumable(
           fileRef,

@@ -1,5 +1,12 @@
 <div class="dialog-container">
   <h2>{{ data.message }}</h2>
+  @if (data.details?.length) {
+    <ul class="details-list">
+      @for (line of data.details; track $index) {
+        <li>{{ line }}</li>
+      }
+    </ul>
+  }
   <div class="actions-container">
     <button mat-button (click)="onClose()">Go back</button>
   </div>

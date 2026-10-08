@@ -10,7 +10,9 @@ import { MatButton } from '@angular/material/button';
 })
 export class MessageDialogComponent {
   #dialogRef = inject(DialogRef);
-  protected readonly data = inject<{ message: string }>(DIALOG_DATA);
+  protected readonly data = inject<{ details?: string[]; message: string }>(
+    DIALOG_DATA
+  );
 
   protected onClose(): void {
     this.#dialogRef.close();

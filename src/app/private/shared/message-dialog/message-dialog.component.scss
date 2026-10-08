@@ -8,6 +8,17 @@
   border-radius: 8px;
 }
 
+.details-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 40vh;
+  overflow-y: auto;
+  text-align: left;
+  font-size: 13px;
+  word-break: break-all;
+}
+
 .actions-container {
   display: flex;
   margin-top: 20px;
@@ -17,4 +28,3 @@
     width: 100%;
   }
 }
-

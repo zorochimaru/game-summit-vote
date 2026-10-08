@@ -30,9 +30,13 @@ import {
   filter,
   finalize,
   forkJoin,
+  from,
+  map,
+  mergeMap,
   of,
   switchMap,
-  tap
+  tap,
+  toArray
 } from 'rxjs';
 import { read, utils } from 'xlsx';
 
@@ -127,6 +131,7 @@ export class AdminPanelComponent {
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
 
   readonly #deletedCriterias = signal<CriteriaFirestore[]>([]);
+  #originalCraftMedia: CraftMedia[][] = [];
 
   constructor() {
     effect(() => {
@@ -234,6 +239,12 @@ export class AdminPanelComponent {
             files: []
           }))
         );
+        this.#originalCraftMedia = data.map(
+          item =>
+            ((item as CosplayFirestore).craftMedia as
+              | CraftMedia[]
+              | undefined) ?? []
+        );
       });
   }
 
@@ -275,6 +286,7 @@ export class AdminPanelComponent {
           this.craftMedia.set(
             orderedRows.map(() => ({ existing: [], files: [] }))
           );
+          this.#originalCraftMedia = [];
         } catch (err) {
           this.#handleError(err);
         } finally {
@@ -396,11 +408,13 @@ export class AdminPanelComponent {
     }
 
     const folders = new Map<number, File[]>();
-    let outside = 0;
+    const outside: string[] = [];
     for (const file of Array.from(fileList)) {
       const parts = file.webkitRelativePath.split('/');
       if (parts.length !== 3 || !/^\d+$/.test(parts[1])) {
-        outside++;
+        outside.push(
+          `${file.webkitRelativePath} (not at ${parts[0]}/<number>/<file>)`
+        );
         continue;
       }
       const order = Number(parts[1]);
@@ -408,15 +422,19 @@ export class AdminPanelComponent {
     }
 
     const orders = new Set(this.rows().map(row => row.order));
-    const unmatched: number[] = [];
+    const unmatched: string[] = [];
     const updates = new Map<number, File[]>();
-    let nonMedia = 0;
+    const nonMedia: string[] = [];
     let matchedFiles = 0;
     for (const [order, files] of [...folders].sort((a, b) => a[0] - b[0])) {
       const { media, dropped } = this.#splitMedia(files);
-      nonMedia += dropped;
+      for (const file of dropped) {
+        nonMedia.push(
+          `${file.webkitRelativePath} (${file.type || 'unknown type'})`
+        );
+      }
       if (!orders.has(order)) {
-        unmatched.push(order);
+        unmatched.push(`folder ${order} (${files.length} files)`);
         continue;
       }
       if (media.length) {
@@ -438,21 +456,15 @@ export class AdminPanelComponent {
       });
     }
 
-    const skipped: string[] = [];
-    if (unmatched.length) {
-      skipped.push(`folder ${unmatched.join(', ')} (no participant)`);
-    }
-    if (nonMedia) {
-      skipped.push(`${nonMedia} non-media files`);
-    }
-    if (outside) {
-      skipped.push(`${outside} files outside numbered folders`);
-    }
+    const details = [
+      ...this.#describeSkipped('Outside numbered folders', outside),
+      ...this.#describeSkipped('Non-media files', nonMedia),
+      ...this.#describeSkipped('No matching participant', unmatched)
+    ];
     this.#dialog.open(MessageDialogComponent, {
       data: {
-        message: `Matched ${updates.size} folders, ${matchedFiles} files.${
-          skipped.length ? ` Skipped: ${skipped.join('; ')}.` : ''
-        }`
+        details,
+        message: `Matched ${updates.size} folders, ${matchedFiles} files.`
       }
     });
   }
@@ -474,48 +486,92 @@ export class AdminPanelComponent {
   }
 
   protected onSaveData(): void {
-    const total = this.images().filter(img => img.file).length;
+    const type = this.typeControl.getRawValue();
+    const rows = this.rows();
+    const images = this.images();
+    const craftState = this.craftMedia();
+    const coverFolder = this.#mapTypeToStorageFolder(type);
+    const craftFolder = this.#privateService.mapTypeToCraftStorageFolder(type);
+    const collectionName = this.#privateService.mapTypeToCollection(type);
+
+    const craftItems: { file: File; position: number; rowIndex: number }[] =
+      craftFolder
+        ? craftState.flatMap((state, rowIndex) =>
+            state.files.map((file, position) => ({ file, position, rowIndex }))
+          )
+        : [];
+    const craftUploaded: CraftMedia[][] = rows.map(
+      (_, i) => new Array<CraftMedia>(craftState[i]?.files.length ?? 0)
+    );
+
+    const total = images.filter(img => img.file).length + craftItems.length;
     let completed = 0;
-    const imageRequests = this.images().map(img =>
+    const onProgress = (res: { progress: number; url: string }): void => {
+      if (res.progress === 100) {
+        completed++;
+        this.progressLabel.set(`Uploading ${completed}/${total}`);
+      }
+    };
+
+    const imageRequests = images.map(img =>
       img.file
-        ? this.#upload
-            .upload(
-              img.file,
-              this.#mapTypeToStorageFolder(this.typeControl.getRawValue())
-            )
-            .pipe(
-              tap(res => {
-                if (res.progress === 100) {
-                  completed++;
-                  this.progressLabel.set(
-                    `Uploading covers ${completed}/${total}`
-                  );
-                }
-              })
-            )
+        ? this.#upload.upload(img.file, coverFolder).pipe(tap(onProgress))
         : of({ progress: 100, url: img.preview })
     );
 
+    const craftRequest = from(craftItems).pipe(
+      mergeMap(
+        ({ file, position, rowIndex }) =>
+          this.#upload
+            .upload(file, craftFolder!, undefined, String(rowIndex + 1))
+            .pipe(
+              tap(onProgress),
+              filter(res => res.progress === 100),
+              tap(res => {
+                craftUploaded[rowIndex][position] = {
+                  url: res.url,
+                  type: file.type.startsWith('video') ? 'video' : 'image',
+                  name: file.name
+                };
+              })
+            ),
+        4
+      ),
+      toArray()
+    );
+
     this.processing.set(true);
-    this.progressLabel.set(total ? `Uploading covers 0/${total}` : '');
+    this.progressLabel.set(total ? `Uploading 0/${total}` : '');
+
+    const craftByRow: (CraftMedia[] | undefined)[] = [];
 
     forkJoin([...imageRequests])
       .pipe(
+        switchMap(imageRes => craftRequest.pipe(map(() => imageRes))),
         switchMap(imageRes => {
           const items: FirestoreBatchWriteItem<
             Partial<KpopFirestore | CosplayFirestore>
-          >[] = this.rows().map((item, i) => ({
-            operation: item['id'] ? Operations.update : Operations.create,
-            docId:
-              (item['id'] as string) ||
-              this.#generateId(this.typeControl.getRawValue()),
-            collectionName: this.#privateService.mapTypeToCollection(
-              this.typeControl.getRawValue()
-            ),
-            data: { ...item, stars: 0, image: imageRes[i].url }
-          }));
-          const batchReqs = this.#firestoreService.batchSave(items);
-          return batchReqs;
+          >[] = rows.map((item, i) => {
+            const data: Partial<KpopFirestore | CosplayFirestore> = {
+              ...item,
+              stars: 0,
+              image: imageRes[i].url
+            };
+            if (craftFolder) {
+              const media = craftState[i]?.files.length
+                ? craftUploaded[i]
+                : (craftState[i]?.existing ?? []);
+              craftByRow[i] = media;
+              (data as Partial<CosplayFirestore>).craftMedia = media;
+            }
+            return {
+              operation: item['id'] ? Operations.update : Operations.create,
+              docId: (item['id'] as string) || this.#generateId(type),
+              collectionName,
+              data
+            };
+          });
+          return this.#firestoreService.batchSave(items);
         }),
         catchError(err => this.#handleError(err)),
         finalize(() => {
@@ -525,12 +581,28 @@ export class AdminPanelComponent {
         takeUntilDestroyed(this.#dr)
       )
       .subscribe(() => {
+        this.#removeReplacedCraftMedia(craftByRow);
+        this.#originalCraftMedia = [];
         this.rows.set([]);
         this.displayedColumns.set([]);
         this.images.set([]);
         this.craftMedia.set([]);
         this.#snackBar.open('Data updated!', 'Ok', { duration: 3000 });
       });
+  }
+
+  #removeReplacedCraftMedia(saved: (CraftMedia[] | undefined)[]): void {
+    const used = new Set(saved.flatMap(media => media ?? []).map(m => m.url));
+    const stale = this.#originalCraftMedia
+      .flat()
+      .map(m => m.url)
+      .filter(url => !used.has(url));
+    stale.forEach(url =>
+      this.#upload
+        .remove(url)
+        .pipe(catchError(() => of(null)))
+        .subscribe()
+    );
   }
 
   protected onSaveCriterias(): void {
@@ -601,21 +673,35 @@ export class AdminPanelComponent {
 
   #filterAndSortMedia(files: File[]): File[] {
     const { media, dropped } = this.#splitMedia(files);
-    if (dropped) {
-      this.#snackBar.open(`${dropped} non-media files ignored`, 'Ok', {
+    if (dropped.length) {
+      this.#snackBar.open(`${dropped.length} non-media files ignored`, 'Ok', {
         duration: 3000
       });
     }
     return media;
   }
 
-  #splitMedia(files: File[]): { dropped: number; media: File[] } {
+  #splitMedia(files: File[]): { dropped: File[]; media: File[] } {
+    const isMedia = (f: File): boolean =>
+      f.type.startsWith('image/') || f.type.startsWith('video/');
     const media = files
-      .filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
+      .filter(isMedia)
       .sort((a, b) =>
         a.name.localeCompare(b.name, undefined, { numeric: true })
       );
-    return { dropped: files.length - media.length, media };
+    return { dropped: files.filter(f => !isMedia(f)), media };
+  }
+
+  #describeSkipped(title: string, items: string[]): string[] {
+    if (!items.length) {
+      return [];
+    }
+    const limit = 20;
+    const lines = [`${title} (${items.length}):`, ...items.slice(0, limit)];
+    if (items.length > limit) {
+      lines.push(`…and ${items.length - limit} more`);
+    }
+    return lines;
   }
 
   #generateId(type: VoteTypes): string {
