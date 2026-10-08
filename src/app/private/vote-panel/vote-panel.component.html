@@ -79,6 +79,16 @@
           <p class="scene-description">{{ sceneDescription }}</p>
         </div>
       }
+      @if (activeCraftMedia().length) {
+        <button
+          type="button"
+          mat-stroked-button
+          class="craft-media-button"
+          (click)="showCraftMedia()">
+          <mat-icon>perm_media</mat-icon>
+          Show Craft Media ({{ activeCraftMedia().length }})
+        </button>
+      }
     </div>
   </div>
 </div>

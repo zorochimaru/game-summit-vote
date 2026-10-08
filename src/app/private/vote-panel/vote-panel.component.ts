@@ -37,12 +37,17 @@ import {
 import {
   CommonResult,
   CommonResultFirestore,
+  CraftMedia,
   CriteriaFirestore,
   Score
 } from '../core';
 import { CommonVoteItemFirestore } from '../core/interfaces/common-vote-item-firestore.interface';
 import { PrivateService } from '../private.service';
-import { ConfirmDialogComponent, ImageDialogComponent } from '../shared';
+import {
+  ConfirmDialogComponent,
+  CraftMediaDialogComponent,
+  ImageDialogComponent
+} from '../shared';
 
 type TResultsArray = FormArray<TypedForm<Score>>;
 
@@ -86,6 +91,11 @@ export class VotePanelComponent implements OnInit {
 
   protected readonly activePerson = signal<CommonVoteItemFirestore | null>(
     null
+  );
+
+  protected readonly activeCraftMedia = computed(
+    () =>
+      (this.activePerson()?.['craftMedia'] as CraftMedia[] | undefined) ?? []
   );
 
   protected readonly activePersonIndex = computed(
@@ -160,6 +170,18 @@ export class VotePanelComponent implements OnInit {
     }
     this.#dialog.open(ImageDialogComponent, {
       data: src,
+      autoFocus: '__non_existing_element__'
+    });
+  }
+
+  protected showCraftMedia(): void {
+    const person = this.activePerson();
+    const media = this.activeCraftMedia();
+    if (!person || !media.length) {
+      return;
+    }
+    this.#dialog.open(CraftMediaDialogComponent, {
+      data: { title: person.name, media },
       autoFocus: '__non_existing_element__'
     });
   }
@@ -302,7 +324,8 @@ export class VotePanelComponent implements OnInit {
           item.label !== 'order' &&
           item.label !== 'image' &&
           item.label !== 'count' &&
-          item.label !== 'sceneDescription'
+          item.label !== 'sceneDescription' &&
+          item.label !== 'craftMedia'
       )
       .sort((a, b) => a.label.localeCompare(b.label));
   }
