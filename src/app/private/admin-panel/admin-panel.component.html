@@ -82,6 +82,24 @@
     </button>
 
     @if (rows().length) {
+      @if (displayedColumns().includes("craftMedia")) {
+        <input
+          multiple
+          hidden
+          type="file"
+          webkitdirectory
+          #craftFolderInput
+          onclick="this.value=null"
+          (change)="setCraftMediaFolder($event)" />
+        <button
+          type="button"
+          matTooltip="Upload craft media folder"
+          mat-fab
+          [disabled]="processing()"
+          (click)="craftFolderInput.click()">
+          <mat-icon>drive_folder_upload</mat-icon>
+        </button>
+      }
       <button
         type="button"
         matTooltip="Save data"

@@ -60,7 +60,7 @@ import {
   KpopFirestore
 } from '../core';
 import { PrivateService } from '../private.service';
-import { ConfirmDialogComponent } from '../shared';
+import { ConfirmDialogComponent, MessageDialogComponent } from '../shared';
 
 type VoteItem = Kpop | Cosplay;
 
@@ -387,6 +387,76 @@ export class AdminPanelComponent {
     });
   }
 
+  protected setCraftMediaFolder(event: Event): void {
+    const element = event.currentTarget as HTMLInputElement;
+    const fileList: FileList | null = element.files;
+
+    if (!fileList?.length) {
+      return;
+    }
+
+    const folders = new Map<number, File[]>();
+    let outside = 0;
+    for (const file of Array.from(fileList)) {
+      const parts = file.webkitRelativePath.split('/');
+      if (parts.length !== 3 || !/^\d+$/.test(parts[1])) {
+        outside++;
+        continue;
+      }
+      const order = Number(parts[1]);
+      folders.set(order, [...(folders.get(order) ?? []), file]);
+    }
+
+    const orders = new Set(this.rows().map(row => row.order));
+    const unmatched: number[] = [];
+    const updates = new Map<number, File[]>();
+    let nonMedia = 0;
+    let matchedFiles = 0;
+    for (const [order, files] of [...folders].sort((a, b) => a[0] - b[0])) {
+      const { media, dropped } = this.#splitMedia(files);
+      nonMedia += dropped;
+      if (!orders.has(order)) {
+        unmatched.push(order);
+        continue;
+      }
+      if (media.length) {
+        updates.set(order, media);
+        matchedFiles += media.length;
+      }
+    }
+
+    if (updates.size) {
+      this.craftMedia.update(prev => {
+        const next = [...prev];
+        for (const [order, files] of updates) {
+          next[order - 1] = {
+            existing: prev[order - 1]?.existing ?? [],
+            files
+          };
+        }
+        return next;
+      });
+    }
+
+    const skipped: string[] = [];
+    if (unmatched.length) {
+      skipped.push(`folder ${unmatched.join(', ')} (no participant)`);
+    }
+    if (nonMedia) {
+      skipped.push(`${nonMedia} non-media files`);
+    }
+    if (outside) {
+      skipped.push(`${outside} files outside numbered folders`);
+    }
+    this.#dialog.open(MessageDialogComponent, {
+      data: {
+        message: `Matched ${updates.size} folders, ${matchedFiles} files.${
+          skipped.length ? ` Skipped: ${skipped.join('; ')}.` : ''
+        }`
+      }
+    });
+  }
+
   protected deleteResults(): void {
     this.#dialog.open(ConfirmDialogComponent).closed.subscribe(res => {
       if (res) {
@@ -530,18 +600,22 @@ export class AdminPanelComponent {
   }
 
   #filterAndSortMedia(files: File[]): File[] {
-    const media = files.filter(
-      f => f.type.startsWith('image/') || f.type.startsWith('video/')
-    );
-    const dropped = files.length - media.length;
+    const { media, dropped } = this.#splitMedia(files);
     if (dropped) {
       this.#snackBar.open(`${dropped} non-media files ignored`, 'Ok', {
         duration: 3000
       });
     }
-    return media.sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true })
-    );
+    return media;
+  }
+
+  #splitMedia(files: File[]): { dropped: number; media: File[] } {
+    const media = files
+      .filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
+      .sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true })
+      );
+    return { dropped: files.length - media.length, media };
   }
 
   #generateId(type: VoteTypes): string {
