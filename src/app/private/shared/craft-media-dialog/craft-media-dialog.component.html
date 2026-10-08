@@ -1,0 +1,53 @@
+<div class="header">
+  <h2 class="title">{{ data.title }}</h2>
+  <span class="counter"
+    >{{ currentIndex() + 1 }} / {{ data.media.length }}</span
+  >
+  <button
+    mat-icon-button
+    type="button"
+    class="close-btn"
+    aria-label="Close"
+    (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+<swiper-container
+  class="main-swiper"
+  navigation="true"
+  keyboard="true"
+  thumbs-swiper="#craft-media-thumbs"
+  (swiperslidechange)="onSlideChange($event)">
+  @for (item of data.media; track $index) {
+    <swiper-slide>
+      @if (item.type === "video") {
+        <video
+          class="swiper-no-swiping media"
+          controls
+          playsinline
+          preload="metadata"
+          [src]="item.url"></video>
+      } @else {
+        <img class="media" [src]="item.url" [alt]="item.name" />
+      }
+    </swiper-slide>
+  }
+</swiper-container>
+<swiper-container
+  id="craft-media-thumbs"
+  class="thumbs-swiper"
+  slides-per-view="auto"
+  space-between="8"
+  free-mode="true"
+  watch-slides-progress="true">
+  @for (item of data.media; track $index) {
+    <swiper-slide class="thumb">
+      @if (item.type === "video") {
+        <video muted preload="metadata" [src]="item.url + '#t=0.1'"></video>
+        <mat-icon class="play-icon">play_circle</mat-icon>
+      } @else {
+        <img loading="lazy" [src]="item.url" [alt]="item.name" />
+      }
+    </swiper-slide>
+  }
+</swiper-container>

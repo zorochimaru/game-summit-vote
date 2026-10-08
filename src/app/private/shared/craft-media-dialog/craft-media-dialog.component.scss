@@ -1,0 +1,84 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 95vw;
+  height: 90vh;
+  padding: 8px;
+  box-sizing: border-box;
+  background: var(--fg-dark);
+  color: var(--fg-light);
+  border-radius: 8px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.close-btn {
+  color: var(--fg-light);
+}
+
+.main-swiper {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  --swiper-navigation-color: var(--accent-color);
+}
+
+.media {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.thumbs-swiper {
+  flex: none;
+  height: 64px;
+  width: 100%;
+}
+
+.thumb {
+  position: relative;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 1;
+  opacity: 0.5;
+  cursor: pointer;
+
+  &.swiper-slide-thumb-active {
+    opacity: 1;
+    outline: 2px solid var(--accent-color);
+  }
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.play-icon {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  color: var(--fg-light);
+  pointer-events: none;
+}
+
+@media screen and (max-width: 600px) {
+  .thumbs-swiper {
+    height: 48px;
+  }
+}
