@@ -178,9 +178,35 @@
                   }
                 </div>
               } @else if (column === "craftMedia") {
-                <span class="craft-media-badge">{{
-                  craftMediaLabels()[element.order - 1] ?? "0 files"
-                }}</span>
+                <div class="craft-media-cell">
+                  <span class="craft-media-badge">{{
+                    craftMediaLabels()[element.order - 1] ?? "0 files"
+                  }}</span>
+                  <input
+                    multiple
+                    hidden
+                    type="file"
+                    #craft_media_input
+                    onclick="this.value=null"
+                    accept="image/*,video/*"
+                    (change)="setCraftMedia($event, element.order - 1)" />
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Upload craft media"
+                    [disabled]="processing()"
+                    (click)="craft_media_input.click()">
+                    <mat-icon>perm_media</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Clear craft media"
+                    [disabled]="processing()"
+                    (click)="clearCraftMedia(element.order - 1)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               } @else if (column === "sceneDescription") {
                 <p class="scene-description-cell">{{ element[column] }}</p>
               } @else {

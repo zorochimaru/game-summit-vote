@@ -362,6 +362,31 @@ export class AdminPanelComponent {
     }
   }
 
+  protected setCraftMedia(event: Event, index: number): void {
+    const element = event.currentTarget as HTMLInputElement;
+    const fileList: FileList | null = element.files;
+
+    if (fileList?.length) {
+      const files = this.#filterAndSortMedia(Array.from(fileList));
+      if (!files.length) {
+        return;
+      }
+      this.craftMedia.update(prev => {
+        const next = [...prev];
+        next[index] = { existing: prev[index]?.existing ?? [], files };
+        return next;
+      });
+    }
+  }
+
+  protected clearCraftMedia(index: number): void {
+    this.craftMedia.update(prev => {
+      const next = [...prev];
+      next[index] = { existing: [], files: [] };
+      return next;
+    });
+  }
+
   protected deleteResults(): void {
     this.#dialog.open(ConfirmDialogComponent).closed.subscribe(res => {
       if (res) {
@@ -502,6 +527,21 @@ export class AdminPanelComponent {
       case VoteTypes.kpop:
         return StorageFolders.kpop;
     }
+  }
+
+  #filterAndSortMedia(files: File[]): File[] {
+    const media = files.filter(
+      f => f.type.startsWith('image/') || f.type.startsWith('video/')
+    );
+    const dropped = files.length - media.length;
+    if (dropped) {
+      this.#snackBar.open(`${dropped} non-media files ignored`, 'Ok', {
+        duration: 3000
+      });
+    }
+    return media.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true })
+    );
   }
 
   #generateId(type: VoteTypes): string {
