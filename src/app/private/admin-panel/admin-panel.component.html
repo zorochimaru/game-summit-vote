@@ -177,6 +177,10 @@
                     </button>
                   }
                 </div>
+              } @else if (column === "craftMedia") {
+                <span class="craft-media-badge">{{
+                  craftMediaLabels()[element.order - 1] ?? "0 files"
+                }}</span>
               } @else if (column === "sceneDescription") {
                 <p class="scene-description-cell">{{ element[column] }}</p>
               } @else {

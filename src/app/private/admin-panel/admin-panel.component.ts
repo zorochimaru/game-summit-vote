@@ -1,7 +1,14 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TitleCasePipe } from '@angular/common';
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -45,6 +52,7 @@ import { filterPredicate } from '../../utils';
 import {
   Cosplay,
   CosplayFirestore,
+  CraftMedia,
   Criteria,
   CriteriaFirestore,
   ExcelFileFields,
@@ -87,6 +95,22 @@ export class AdminPanelComponent {
   protected criterias = signal<Criteria[] | CriteriaFirestore[]>([]);
   protected rows = signal<VoteItem[]>([]);
   protected images = signal<{ preview: string; file?: File }[]>([]);
+  protected craftMedia = signal<{ existing: CraftMedia[]; files: File[] }[]>(
+    []
+  );
+  protected craftMediaLabels = computed(() =>
+    this.craftMedia().map(({ existing, files }) => {
+      if (files.length) {
+        const videos = files.filter(f => f.type.startsWith('video')).length;
+        return `${files.length} files (${files.length - videos} 📷 / ${videos} 🎬) · pending`;
+      }
+      if (!existing.length) {
+        return '0 files';
+      }
+      const existingVideos = existing.filter(m => m.type === 'video').length;
+      return `${existing.length} files (${existing.length - existingVideos} 📷 / ${existingVideos} 🎬)`;
+    })
+  );
   protected displayedColumns = signal<string[]>([]);
 
   protected types = signal([
@@ -201,6 +225,15 @@ export class AdminPanelComponent {
         );
         this.rows.set(data);
         this.images.set(data.map(item => ({ preview: item.image || '' })));
+        this.craftMedia.set(
+          data.map(item => ({
+            existing:
+              ((item as CosplayFirestore).craftMedia as
+                | CraftMedia[]
+                | undefined) ?? [],
+            files: []
+          }))
+        );
       });
   }
 
@@ -221,7 +254,13 @@ export class AdminPanelComponent {
             raw: true
           });
           const columns = Object.keys(rows[0]);
-          this.displayedColumns.set([...columns, 'image']);
+          this.displayedColumns.set([
+            ...columns,
+            'image',
+            ...(this.typeControl.getRawValue() === VoteTypes.kpop
+              ? []
+              : ['craftMedia'])
+          ]);
           const orderedRows = rows.map((x, i) => ({
             ...x,
             stars: 0,
@@ -232,6 +271,9 @@ export class AdminPanelComponent {
             orderedRows.map(item => ({
               preview: item.image || ''
             }))
+          );
+          this.craftMedia.set(
+            orderedRows.map(() => ({ existing: [], files: [] }))
           );
         } catch (err) {
           this.#handleError(err);
@@ -391,6 +433,7 @@ export class AdminPanelComponent {
         this.rows.set([]);
         this.displayedColumns.set([]);
         this.images.set([]);
+        this.craftMedia.set([]);
         this.#snackBar.open('Data updated!', 'Ok', { duration: 3000 });
       });
   }
@@ -435,9 +478,16 @@ export class AdminPanelComponent {
   #mapTypeToTableHeaders(type: VoteTypes): string[] {
     switch (type) {
       case VoteTypes.cosplay:
-        return ['name', 'fandom', 'characterName', 'sceneDescription', 'image'];
+        return [
+          'name',
+          'fandom',
+          'characterName',
+          'sceneDescription',
+          'image',
+          'craftMedia'
+        ];
       case VoteTypes.cosplayTeam:
-        return ['name', 'fandom', 'sceneDescription', 'image'];
+        return ['name', 'fandom', 'sceneDescription', 'image', 'craftMedia'];
       case VoteTypes.kpop:
         return ['name', 'image'];
     }
@@ -496,6 +546,7 @@ export class AdminPanelComponent {
         this.rows.set([]);
         this.displayedColumns.set([]);
         this.images.set([]);
+        this.craftMedia.set([]);
         this.#snackBar.open('Data deleted!', 'Ok', { duration: 3000 });
       });
   }

@@ -68,6 +68,14 @@
   white-space: pre-line;
 }
 
+.craft-media-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
 .img-cell-container img {
   object-fit: cover;
 }
