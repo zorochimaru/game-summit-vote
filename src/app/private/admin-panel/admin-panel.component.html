@@ -1,4 +1,9 @@
 <div class="container admin-panel-container">
+  @if (processing()) {
+    <div class="processing-overlay">
+      <mat-progress-spinner mode="indeterminate" diameter="64" />
+    </div>
+  }
   <div class="actions">
     <mat-button-toggle-group [formControl]="typeControl">
       @for (item of types(); track $index) {
@@ -9,6 +14,7 @@
       type="button"
       matTooltip="Fetch current data"
       mat-fab
+      [disabled]="processing()"
       (click)="fetchData()">
       <mat-icon>cloud_download</mat-icon>
     </button>
@@ -24,6 +30,7 @@
       type="button"
       matTooltip="Upload excel file(sort by rows)"
       mat-fab
+      [disabled]="processing()"
       (click)="csvInput.click()">
       <mat-icon>upload_file</mat-icon>
     </button>
@@ -40,6 +47,7 @@
       type="button"
       matTooltip="Upload images(sort by name)"
       mat-fab
+      [disabled]="processing()"
       (click)="photosInput.click()">
       <mat-icon>photo_library</mat-icon>
     </button>
@@ -47,6 +55,7 @@
     <button
       type="button"
       mat-fab
+      [disabled]="processing()"
       matTooltip="Delete all docs in collection"
       color="warn"
       class="delete-results-btn"
@@ -59,6 +68,7 @@
     <button
       type="button"
       mat-fab
+      [disabled]="processing()"
       color="warn"
       matTooltip="Delete all results"
       class="delete-results-btn"
@@ -73,6 +83,7 @@
         type="button"
         matTooltip="Save data"
         mat-fab
+        [disabled]="processing()"
         (click)="onSaveData()">
         <mat-icon>check</mat-icon>
       </button>
@@ -84,6 +95,7 @@
       type="button"
       matTooltip="Fetch current criterias"
       mat-fab
+      [disabled]="processing()"
       (click)="fetchCriterias()">
       <mat-icon>cloud_download</mat-icon>
     </button>
@@ -100,13 +112,14 @@
             (edited)="editCriteria(item, $event)"
             [aria-description]="'press enter to edit ' + item.name">
             {{ item.name }}
-            <button matChipRemove>
+            <button matChipRemove [disabled]="processing()">
               <mat-icon>cancel</mat-icon>
             </button>
           </mat-chip-row>
         }
         <input
           placeholder="New criteria..."
+          [disabled]="processing()"
           [matChipInputFor]="criteriasChipGrid"
           [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
           [matChipInputAddOnBlur]="true"
@@ -118,6 +131,7 @@
       type="button"
       matTooltip="Save criterias"
       mat-fab
+      [disabled]="processing()"
       (click)="onSaveCriterias()">
       <mat-icon>check</mat-icon>
     </button>
@@ -144,6 +158,7 @@
                   @if (images()[element.order - 1]; as image) {
                     <img
                       style="cursor: pointer"
+                      [class.disabled]="processing()"
                       mat-button
                       (click)="single_image_input.click()"
                       [src]="image.preview"
@@ -153,6 +168,7 @@
                     <button
                       type="button"
                       mat-fab
+                      [disabled]="processing()"
                       (click)="single_image_input.click()">
                       <mat-icon>image</mat-icon>
                     </button>

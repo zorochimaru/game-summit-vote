@@ -1,7 +1,7 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { TitleCasePipe } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,10 +13,19 @@ import {
 } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { filter, forkJoin, of, switchMap } from 'rxjs';
+import {
+  catchError,
+  EMPTY,
+  filter,
+  finalize,
+  forkJoin,
+  of,
+  switchMap
+} from 'rxjs';
 import { read, utils } from 'xlsx';
 
 import {
@@ -57,6 +66,7 @@ type VoteItem = Kpop | Cosplay;
     TitleCasePipe,
     MatChipsModule,
     MatFormFieldModule,
+    MatProgressSpinnerModule,
     MatTooltipModule
   ],
   templateUrl: './admin-panel.component.html',
@@ -71,6 +81,7 @@ export class AdminPanelComponent {
   readonly #privateService = inject(PrivateService);
   readonly #dialog = inject(Dialog);
 
+  protected processing = signal(false);
   protected criterias = signal<Criteria[] | CriteriaFirestore[]>([]);
   protected rows = signal<VoteItem[]>([]);
   protected images = signal<{ preview: string; file?: File }[]>([]);
@@ -90,6 +101,16 @@ export class AdminPanelComponent {
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
 
   readonly #deletedCriterias = signal<CriteriaFirestore[]>([]);
+
+  constructor() {
+    effect(() => {
+      if (this.processing()) {
+        this.typeControl.disable({ emitEvent: false });
+      } else {
+        this.typeControl.enable({ emitEvent: false });
+      }
+    });
+  }
 
   protected addCriteria(event: MatChipInputEvent): void {
     const value = (event.value || '').trim();
@@ -143,11 +164,16 @@ export class AdminPanelComponent {
   }
 
   protected fetchCriterias(): void {
+    this.processing.set(true);
     this.#firestoreService
       .getList<CriteriaFirestore>(
         this.#privateService.mapTypeToCriteriaCollection(
           this.typeControl.getRawValue()
         )
+      )
+      .pipe(
+        catchError(err => this.#handleError(err)),
+        finalize(() => this.processing.set(false))
       )
       .subscribe(data => {
         this.criterias.set(data);
@@ -158,10 +184,15 @@ export class AdminPanelComponent {
     const collection = this.#privateService.mapTypeToCollection(
       this.typeControl.getRawValue()
     );
+    this.processing.set(true);
     this.#firestoreService
       .getList<CosplayFirestore | KpopFirestore>(collection, {
         orderBy: 'order'
       })
+      .pipe(
+        catchError(err => this.#handleError(err)),
+        finalize(() => this.processing.set(false))
+      )
       .subscribe(data => {
         this.displayedColumns.set(
           this.#mapTypeToTableHeaders(this.typeControl.getRawValue())
@@ -344,10 +375,16 @@ export class AdminPanelComponent {
     const deleteReqs = this.#firestoreService.batchSave(deleteItems);
     const batchReqs = this.#firestoreService.batchSave(items);
 
-    forkJoin([batchReqs, deleteReqs]).subscribe(() => {
-      this.criterias.set([]);
-      this.#snackBar.open('Criteria updated!', 'Ok', { duration: 3000 });
-    });
+    this.processing.set(true);
+    forkJoin([batchReqs, deleteReqs])
+      .pipe(
+        catchError(err => this.#handleError(err)),
+        finalize(() => this.processing.set(false))
+      )
+      .subscribe(() => {
+        this.criterias.set([]);
+        this.#snackBar.open('Criteria updated!', 'Ok', { duration: 3000 });
+      });
   }
 
   #mapTypeToTableHeaders(type: VoteTypes): string[] {
@@ -378,7 +415,20 @@ export class AdminPanelComponent {
     );
   }
 
+  #handleError(err: unknown): typeof EMPTY {
+    const message = err instanceof Error ? err.message : String(err ?? '');
+    this.#snackBar.open(
+      `Something went wrong${message ? `: ${message}` : ''}`,
+      'Ok',
+      {
+        duration: 5000
+      }
+    );
+    return EMPTY;
+  }
+
   #deleteAllDataInCollection(type: VoteTypes): void {
+    this.processing.set(true);
     this.#firestoreService
       .getList(this.#privateService.mapTypeToCollection(type))
       .pipe(
@@ -393,7 +443,9 @@ export class AdminPanelComponent {
           }));
           const batchReqs = this.#firestoreService.batchSave(items);
           return batchReqs;
-        })
+        }),
+        catchError(err => this.#handleError(err)),
+        finalize(() => this.processing.set(false))
       )
       .subscribe(() => {
         this.rows.set([]);
@@ -457,6 +509,7 @@ export class AdminPanelComponent {
         })
       );
 
+    this.processing.set(true);
     forkJoin([...requests, ...personsUpdateRequests, clearAuthFlagsRequest])
       .pipe(
         switchMap(() =>
@@ -465,7 +518,9 @@ export class AdminPanelComponent {
             this.#authService.authUser()!.id
           )
         ),
-        filter(Boolean)
+        filter(Boolean),
+        catchError(err => this.#handleError(err)),
+        finalize(() => this.processing.set(false))
       )
       .subscribe(updatedUser => {
         this.#authService.setCurrentUser(updatedUser);
