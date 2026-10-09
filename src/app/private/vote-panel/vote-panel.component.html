@@ -64,7 +64,19 @@
       </swiper-container>
     </div>
     <div class="description-panel">
-      <h2>Description</h2>
+      <div class="description-header">
+        <h2>Description</h2>
+        @if (activeCraftMedia().length) {
+          <button
+            type="button"
+            mat-stroked-button
+            class="craft-media-button"
+            (click)="showCraftMedia()">
+            <mat-icon>perm_media</mat-icon>
+            Show Craft Media ({{ activeCraftMedia().length }})
+          </button>
+        }
+      </div>
       <ul>
         @for (item of descriptionInfo(); track $index) {
           <li>
@@ -78,16 +90,6 @@
           <h3>Scene description</h3>
           <p class="scene-description">{{ sceneDescription }}</p>
         </div>
-      }
-      @if (activeCraftMedia().length) {
-        <button
-          type="button"
-          mat-stroked-button
-          class="craft-media-button"
-          (click)="showCraftMedia()">
-          <mat-icon>perm_media</mat-icon>
-          Show Craft Media ({{ activeCraftMedia().length }})
-        </button>
       }
     </div>
   </div>

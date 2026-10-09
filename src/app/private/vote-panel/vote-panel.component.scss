@@ -132,8 +132,15 @@
     }
   }
 
-  .craft-media-button {
-    margin-top: 12px;
+  .description-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    h2 {
+      margin: 0;
+    }
   }
 
   .scene-description {
@@ -219,6 +226,12 @@ swiper-slide {
 }
 
 @media screen and (max-width: 768px) {
+  .container {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .score-header {
     margin-bottom: 10px;
 
@@ -251,11 +264,38 @@ swiper-slide {
   .selected-item-image {
     order: 1;
     width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+
+    swiper-container {
+      display: block;
+      width: 100%;
+    }
+
+    swiper-slide .active-image-container {
+      min-height: 0;
+    }
   }
 
   .description-panel {
     order: 3;
     width: 100%;
+    min-width: 0;
+
+    li {
+      font-size: 16px;
+      flex-wrap: wrap;
+
+      .description-label {
+        flex: 0 0 auto;
+      }
+
+      .description-value {
+        flex: 1;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+    }
   }
 
   h2 {
@@ -267,15 +307,22 @@ swiper-slide {
   }
 
   .vote-items-container {
+    box-sizing: border-box;
     padding: 10px;
     border-top: 1px solid var(--border-default);
-    height: 200px;
+    height: auto;
   }
 
   .vote-item {
     width: 100px;
-    height: 200px;
+    height: 160px;
   }
+
+  swiper-slide button .order {
+    font-size: 20px;
+    padding: 4px 10px;
+  }
+
 }
 
 @media screen and (max-width: 425px) {
