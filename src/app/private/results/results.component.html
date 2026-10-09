@@ -5,6 +5,8 @@
         <table
           mat-table
           matSort
+          matSortActive="totalScore"
+          matSortDirection="desc"
           (matSortChange)="sortChange($event)"
           [dataSource]="dataSource()"
           class="mat-elevation-z8">

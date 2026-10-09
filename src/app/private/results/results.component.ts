@@ -169,11 +169,16 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   #mapPersonScoresToArray(
     personScores: PersonScore[]
   ): Record<string, string | number>[] {
-    return personScores.map(personScore => {
-      const { personName, personImg, totalScores } = personScore;
-      const totalScore = Object.values(totalScores).reduce((a, b) => a + b, 0);
-      return { personName, personImg, totalScore, ...totalScores };
-    });
+    return personScores
+      .map(personScore => {
+        const { personName, personImg, totalScores } = personScore;
+        const totalScore = Object.values(totalScores).reduce(
+          (a, b) => a + b,
+          0
+        );
+        return { personName, personImg, totalScore, ...totalScores };
+      })
+      .sort((a, b) => this.#compare(a['totalScore'], b['totalScore'], false));
   }
 
   #compare(a: number | string, b: number | string, isAsc: boolean) {
