@@ -176,23 +176,25 @@
                     onclick="this.value=null"
                     accept="image/*"
                     (change)="updateImage($event, element.order - 1)" />
-                  @if (images()[element.order - 1]; as image) {
+                  @if (images()[element.order - 1]?.preview; as preview) {
                     <img
                       style="cursor: pointer"
                       [class.disabled]="processing()"
                       mat-button
                       (click)="single_image_input.click()"
-                      [src]="image.preview"
+                      [src]="preview"
                       [width]="100"
                       [height]="100" />
                   } @else {
-                    <button
-                      type="button"
-                      mat-fab
-                      [disabled]="processing()"
-                      (click)="single_image_input.click()">
-                      <mat-icon>image</mat-icon>
-                    </button>
+                    <img
+                      class="image-placeholder"
+                      style="cursor: pointer"
+                      [class.disabled]="processing()"
+                      (click)="single_image_input.click()"
+                      src="assets/images/small-logo.svg"
+                      alt=""
+                      [width]="100"
+                      [height]="100" />
                   }
                 </div>
               } @else if (column === "craftMedia") {
