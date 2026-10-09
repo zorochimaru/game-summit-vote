@@ -13,7 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
-import { filter, forkJoin, of, switchMap } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {
@@ -62,6 +62,8 @@ export class LoginComponent {
     Roles.kpop
   ]);
 
+  protected readonly isLoading = signal(false);
+
   protected readonly isProd = environment.production;
 
   protected onSubmit(): void {
@@ -69,6 +71,7 @@ export class LoginComponent {
       return;
     }
     const { email, password } = this.form.getRawValue();
+    this.#setLoading(true);
     if (this.modeControl.getRawValue()) {
       this.#onSignIn(email, password);
     } else {
@@ -78,6 +81,12 @@ export class LoginComponent {
 
   protected toggleMode(): void {
     this.modeControl.patchValue(!this.modeControl.getRawValue());
+  }
+
+  #setLoading(isLoading: boolean): void {
+    this.isLoading.set(isLoading);
+    const controls = [this.form, this.modeControl, this.roleControl];
+    controls.forEach(c => (isLoading ? c.disable() : c.enable()));
   }
 
   #onSignUp(email: string, password: string): void {
@@ -95,6 +104,7 @@ export class LoginComponent {
             res.user?.uid
           )
         ),
+        finalize(() => this.#setLoading(false)),
         takeUntilDestroyed(this.#dr)
       )
       .subscribe(() => {
@@ -107,7 +117,10 @@ export class LoginComponent {
   #onSignIn(email: string, password: string): void {
     this.#authService
       .signIn(email, password)
-      .pipe(takeUntilDestroyed(this.#dr))
+      .pipe(
+        finalize(() => this.#setLoading(false)),
+        takeUntilDestroyed(this.#dr)
+      )
       .subscribe(() => {
         this.#router.navigate(['/']);
       });

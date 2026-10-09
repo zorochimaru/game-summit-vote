@@ -2,7 +2,6 @@ import { Dialog } from '@angular/cdk/dialog';
 import { IMAGE_CONFIG, NgOptimizedImage } from '@angular/common';
 import {
   Component,
-  computed,
   DestroyRef,
   inject,
   OnInit,
@@ -54,11 +53,6 @@ export class StarVotePanelComponent implements OnInit {
     this.#route.queryParams.pipe(map(params => params[queryParamKeys.voteType]))
   );
   protected readonly personsList = signal<CommonVoteItemFirestore[]>([]);
-
-  protected readonly starsLeft = computed(() => {
-    const user = this.#authService.authUser();
-    return user?.stars?.[this.type()!] || 0;
-  });
 
   public ngOnInit(): void {
     if (!this.type()) {

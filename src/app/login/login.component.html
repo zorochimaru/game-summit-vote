@@ -51,7 +51,7 @@
       </mat-form-field>
       <button
         type="submit"
-        [disabled]="form.invalid"
+        [disabled]="form.invalid || isLoading()"
         mat-stroked-button
         (click)="onSubmit()">
         Submit

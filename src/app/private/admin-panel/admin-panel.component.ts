@@ -274,7 +274,6 @@ export class AdminPanelComponent {
           ]);
           const orderedRows = rows.map((x, i) => ({
             ...x,
-            stars: 0,
             order: i + 1
           }));
           this.rows.set(orderedRows);
@@ -554,7 +553,6 @@ export class AdminPanelComponent {
           >[] = rows.map((item, i) => {
             const data: Partial<KpopFirestore | CosplayFirestore> = {
               ...item,
-              stars: 0,
               image: imageRes[i].url
             };
             if (craftFolder) {
@@ -756,26 +754,6 @@ export class AdminPanelComponent {
       this.#privateService.mapTypeToResultsCollection(type)
     );
 
-    const personsCollections = Object.values(VoteTypes).map(type =>
-      this.#privateService.mapTypeToCollection(type)
-    );
-
-    const personsUpdateRequests = personsCollections.map(collection => {
-      return this.#firestoreService.getList(collection).pipe(
-        switchMap(list => {
-          const items: FirestoreBatchWriteItem<
-            Partial<KpopFirestore | CosplayFirestore>
-          >[] = list.map(item => ({
-            docId: item.id!,
-            collectionName: collection,
-            operation: Operations.update,
-            data: { ...item, stars: 0 }
-          }));
-          return this.#firestoreService.batchSave(items);
-        })
-      );
-    });
-
     const requests = collections.map(collection =>
       this.#firestoreService.getList(collection).pipe(
         switchMap(list => {
@@ -806,7 +784,7 @@ export class AdminPanelComponent {
       );
 
     this.processing.set(true);
-    forkJoin([...requests, ...personsUpdateRequests, clearAuthFlagsRequest])
+    forkJoin([...requests, clearAuthFlagsRequest])
       .pipe(
         switchMap(() =>
           this.#firestoreService.get<AuthUser>(
