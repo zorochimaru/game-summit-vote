@@ -23,6 +23,17 @@
   gap: 10px;
 }
 
+.submitting-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 50%);
+  pointer-events: all;
+}
+
 .voted-card {
   filter: grayscale(100%);
 }
@@ -322,7 +333,6 @@ swiper-slide {
     font-size: 20px;
     padding: 4px 10px;
   }
-
 }
 
 @media screen and (max-width: 425px) {

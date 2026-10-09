@@ -20,9 +20,17 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSliderModule } from '@angular/material/slider';
 import { ActivatedRoute, Router } from '@angular/router';
-import { combineLatest, filter, map, Observable, switchMap } from 'rxjs';
+import {
+  combineLatest,
+  filter,
+  finalize,
+  map,
+  Observable,
+  switchMap
+} from 'rxjs';
 import { SwiperContainer } from 'swiper/element';
 
 import {
@@ -59,6 +67,7 @@ type TResultsArray = FormArray<TypedForm<Score>>;
     ReactiveFormsModule,
     FormsModule,
     MatIconModule,
+    MatProgressSpinnerModule,
     TitleCasePipe
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -102,6 +111,8 @@ export class VotePanelComponent implements OnInit {
     () =>
       this.personsList().findIndex(x => this.activePerson()?.id === x.id) || 0
   );
+
+  protected readonly submitting = signal(false);
 
   protected readonly descriptionInfo = signal<
     { label: string; value: string }[]
@@ -239,6 +250,7 @@ export class VotePanelComponent implements OnInit {
       if (res) {
         const results = Array.from(this.#finalResults().values());
 
+        this.submitting.set(true);
         this.#firestoreService
           .create<CommonResultFirestore>(
             this.#privateService.mapTypeToResultsCollection(this.type()!),
@@ -264,6 +276,7 @@ export class VotePanelComponent implements OnInit {
               )
             ),
             filter(Boolean),
+            finalize(() => this.submitting.set(false)),
             takeUntilDestroyed(this.#dr)
           )
           .subscribe(updatedUser => {
